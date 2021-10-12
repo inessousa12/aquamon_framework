@@ -1,0 +1,10 @@
+digraph "classes" {
+charset="utf-8"
+rankdir=BT
+"0" [label="{PredictionBlock|models : dict\l|get_model(sensor, typeM, size)\lstartup_models()\ltry_prediction(appended_index, sensor, sensors, tide_period, run_periods_self, run_periods_others, skip_period, ignore_miss)\l}", shape="record"];
+"1" [label="{QualityBlock|cdf_threshold\l|calculate_cdf_probability(x, cdf)\lcalculate_error(actual, predictions)\lfault_detection(sensor, m, predictions, errors)\lload_cdf(path)\lquality_calculation(sensor, m, predictions, errors)\l}", shape="record"];
+"2" [label="{SensorData|frequency : int\lsensor_name\ltype : str\l|append(new_entry)\lappend_raw(new_entry)\lget(idx)\lgetLast()\lget_raw_values()\lget_values()\lget_values_without_predictions()\lput_prediction(value, index)\l}", shape="record"];
+"3" [label="{SensorHandler|cdf_threshold : float\lignore_miss : bool\lprediction_block\lprediction_queue : Queue\lpredictions_data : dict\lquality_block\lquality_data : dict\lquality_queue : Queue\lrun_periods_others\lrun_periods_self\lsensors_data : dict\lskip_period : int\ltide_period\l|append(data)\l}", shape="record"];
+"0" -> "3" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="prediction_block", style="solid"];
+"1" -> "3" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="quality_block", style="solid"];
+}

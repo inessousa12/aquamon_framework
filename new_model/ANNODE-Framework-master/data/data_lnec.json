@@ -1,0 +1,10 @@
+{
+    "raw_path": "data/raw_main/",
+    "save_path": "data/processed/",
+    "metrics": ["temp"],
+    "n_sensors": 1,
+    "run_periods_self": 10,  
+    "run_periods_others": 0, 
+    "tide_period": 750,
+    "skip_period": 5
+}
