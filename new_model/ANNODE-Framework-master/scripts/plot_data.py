@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from io_data import load_raw
 
 # times, values = load_raw("data\\raw_main\\21jul_2009-18oct_2009\\temp\\dsdma_temp_21jul_18oct2009.mat")
-times, values = load_raw("scripts\lnec_temp_data_2020_2021_not_raw.mat")
+times, values = load_raw("data\lnec\lnec_out_file.mat")
 # times, values = load_raw("data\processed\\21jul_2009-18oct_2009\\temp\dsdma.npz")
 
 

@@ -14,6 +14,8 @@ from tensorflow import keras
 from format_data import generate1
 from io_data import load_processed
 
+import csv
+
 '''
 TODO
 > Quality calculation for: 1 > quality > 0
@@ -36,9 +38,9 @@ class SensorData:
         self.__init_buffer = []
         self.__init_ok = False
 
-    def __str__(self):
-        str = "Data: ", self.__data
-        return str
+    # def __str__(self):
+    #     str = "Data: ", self.get_values()
+    #     return str
 
     def __populate(self):
         intervals = {}
@@ -190,6 +192,20 @@ class SensorData:
 
         return values, times
 
+    def get_values_in_csv(self):
+        with open('./data/lnec/lnec_out_file.csv', 'w', encoding='UTF8', newline='') as f:
+            # create the csv writer
+            writer = csv.writer(f)
+
+            values = [i["value"] for i in self.__data]
+            time = [i["time"] for i in self.__data]
+
+            zipped = list(zip(time, values))
+
+            for elem in zipped:
+                writer.writerow(elem)
+            
+
 
 class SensorHandler:
     def __init__(self, tide_period, run_periods_self, run_periods_others, cdf_threshold=0.998, skip_period=0, ignore_miss=False):
@@ -222,7 +238,7 @@ class SensorHandler:
     def __str__(self):
         str = ""
         for sensor in self.sensors_data:
-            str += self.sensors_data[sensor]
+            print(self.sensors_data[sensor].get_values_in_csv())
         return str
 
     def append(self, data):

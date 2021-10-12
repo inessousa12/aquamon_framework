@@ -24,11 +24,11 @@
 
 % Import the data
 format long
-lnectempdata = readtable("C:\Users\Inês\Dropbox\Mestrado\Tese\Reports\Data Quality\Tese João Penim\ANNODE-Framework-master\scripts\lnec_temp_data_2020_2021.csv");
-p=posixtime(datetime(lnectempdata{:,2}, "InputFormat", "dd-MM-yy HH:mm"));
-q=lnectempdata{:,1};
+lnectempdata = readtable("C:\Users\Inês\Dropbox\Mestrado\Tese\Reports\Data Quality\Tese João Penim\new_model\ANNODE-Framework-master\data\lnec\lnec_out_file.csv");
+p=datetime(lnectempdata{:,1}, "InputFormat", "dd-MM-yy HH:mm"));
+q=lnectempdata{:,2};
 data = [reshape(p.', [], 1), reshape(q.', [], 1)];
-save('C:\Users\Inês\Dropbox\Mestrado\Tese\Reports\Data Quality\Tese João Penim\ANNODE-Framework-master\scripts\lnec_temp_data_2020_2021_not_raw.mat','data')
+save('C:\Users\Inês\Dropbox\Mestrado\Tese\Reports\Data Quality\Tese João Penim\new_model\ANNODE-Framework-master\data\lnec\lnec_out_file.mat','data')
 
 %% Clear temporary variables
 clear opts
