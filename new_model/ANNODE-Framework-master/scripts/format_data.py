@@ -119,7 +119,7 @@ def build_new_times(sizes, times, skip_period, tide_period):
     # encontra o timestep inicial para comecar a corrida
     init_time_idx = 0
     max_time_idx = [index for index, item in enumerate(times_target_sensor) if item != 0][-1]
-    for i in range(final_init_time_idx, max_time_idx):
+    for i in range(final_init_time_idx, max_time_idx):  #lnec example 10 values
         val = times[0][i]
         counter_differences = 0
         for j in range(1, len(times)):
