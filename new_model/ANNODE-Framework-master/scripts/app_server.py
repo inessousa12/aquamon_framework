@@ -56,7 +56,7 @@ def log_thread(sensor_handler):
     flag = True
     last_value = 0
     double = 0
-    while flag:
+    while True:
         time.sleep(1)
         msg = ''
 

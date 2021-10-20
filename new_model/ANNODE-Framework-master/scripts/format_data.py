@@ -4,6 +4,7 @@ from os import makedirs
 from os.path import isfile, join, isdir
 
 import numpy as np
+import time
 
 import io_data
 
@@ -240,12 +241,22 @@ def build1_input(new_times, times, values, idx_target, tide_period, run_periods_
                 if input_idx == last_val:
                     increment = increment + 1
                     input_idx = input_idx - 1
-            
+
+            # print("final_idx: ", final_idx)
+            # print("input_idx: ", input_idx)
+            # time.sleep(5)
+
             last_val = input_idx
             input_times[0].append(times[0][input_idx])
             inputs.append(values[0][input_idx])
 
+    # print(times)
+    # print(len(times))
+    # time.sleep(5)
+
     for j in range(1, len(times)):
+        print("new_times idx_target: ", new_times[idx_target])
+        print("new_times j: ", new_times[idx_target][j])
         if new_times[idx_target][j][2] != 0:
             input_times.append([])
             time_minus_tide_period = times[j][new_times[idx_target][j][2]]
@@ -261,6 +272,7 @@ def build1_input(new_times, times, values, idx_target, tide_period, run_periods_
             final_idx = new_times[idx_target][j][2]
 
             diff_between_idxs = final_idx - first_idx
+            
 
             linear_times_array = np.ceil(
                 np.exp(np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_others))) - 1
@@ -278,6 +290,10 @@ def build1_input(new_times, times, values, idx_target, tide_period, run_periods_
                     if input_idx == last_val:
                         increment = increment + 1
                         input_idx = input_idx - 1
+                
+                print("final_idx: ", final_idx)
+                print("input_idx: ", input_idx)
+                time.sleep(3000000000000)
 
                 last_val = input_idx
                 input_times[j].append(times[j][input_idx])

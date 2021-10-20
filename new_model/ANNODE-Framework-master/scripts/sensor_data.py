@@ -478,6 +478,9 @@ class PredictionBlock:
                 #sensors[sensor_name].get_raw_values_w_predictions()
                 values.append(temp_v)
                 times.append(temp_t)
+        # print("BEFORE")
+        # print(values)
+        # print(times)
         
         # Switch sensor[0] to the main sensor
         tmp = np.copy(values[0])
@@ -488,12 +491,17 @@ class PredictionBlock:
         times[0] = times[main_sensor_index]
         times[main_sensor_index] = tmp
         # Convert to numpy array
+        print(len(values))
         for i in range(len(values)):
             values[i] = np.asarray(values[i])
             times[i] = np.asarray(times[i])
 
         values = np.asarray(values)
         times = np.asarray(times)
+        # print("AFTER")
+        # print(values)
+        # print(times)
+        time.sleep(500)
 
         sizes = [len(i) for i in values]
         

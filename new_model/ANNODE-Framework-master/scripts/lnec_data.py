@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
  
 # Opening JSON file and loading the data
 # into the variable data
-with open('./scripts/json_lnec_data.json') as json_file:
+with open('.\data\lnec\lnec_temp_data_faulty.json') as json_file:
     data = json.load(json_file)
 
 new_data = data[0]
@@ -20,12 +20,12 @@ sensor_data = new_data
 sensor_data = new_data["data"]
 # print(len(sensor_data))
 for i in range(len(sensor_data)):
-#     # del sensor_data[i]['data']
-    del sensor_data[i]['type']
-    del sensor_data[i]['sensor']
+    del sensor_data[i]['depth']
+    # del sensor_data[i]['type']
+    # del sensor_data[i]['sensor']
 
 # now we will open a file for writing
-data_file = open('./scripts/lnec_temp_data_2020_2021.csv', 'w', newline='')
+data_file = open('./scripts/lnec_temp_data_faulty.csv', 'w', newline='')
  
 # create the csv writer object
 csv_writer = csv.writer(data_file)
@@ -44,8 +44,8 @@ for d in sensor_data:
         count += 1
  
     #change from timestamp to date time
-    timestamp = d["time"]
-    d["time"] = datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M")
+    timestamp = d["x"]
+    d["x"] = datetime.datetime.fromtimestamp(timestamp/1000).strftime("%Y-%m-%d %H:%M")
     
     # Writing data of CSV file
     csv_writer.writerow(d.values())
