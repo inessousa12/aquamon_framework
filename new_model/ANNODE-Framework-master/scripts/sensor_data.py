@@ -491,7 +491,7 @@ class PredictionBlock:
         times[0] = times[main_sensor_index]
         times[main_sensor_index] = tmp
         # Convert to numpy array
-        
+        print(len(values))
         for i in range(len(values)):
             values[i] = np.asarray(values[i])
             times[i] = np.asarray(times[i])
@@ -501,7 +501,7 @@ class PredictionBlock:
         # print("AFTER")
         # print(values)
         # print(times)
-        # time.sleep(500)
+        time.sleep(500)
 
         sizes = [len(i) for i in values]
         

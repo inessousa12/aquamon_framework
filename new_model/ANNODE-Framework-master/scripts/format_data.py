@@ -210,7 +210,6 @@ def build1_input(new_times, times, values, idx_target, tide_period, run_periods_
         tmp = times[0][:]
 
         first_idx = np.searchsorted(tmp, time_minus_tide_period, side="right")
-        # print("FIRST_IDX: ", first_idx)
         if first_idx == len(tmp):
             first_idx = -1
         else:
@@ -221,10 +220,6 @@ def build1_input(new_times, times, values, idx_target, tide_period, run_periods_
             first_idx = 0
 
         final_idx = new_times[idx_target][0][2] - 1
-        # print("INDEX_TARGET: ", idx_target)
-        # print("NEW TIMES: ", new_times[idx_target][0][2])
-
-        time.sleep(30000)
 
         if final_idx < 0:
             final_idx = 0
@@ -260,8 +255,8 @@ def build1_input(new_times, times, values, idx_target, tide_period, run_periods_
     # time.sleep(5)
 
     for j in range(1, len(times)):
-        # print("new_times idx_target: ", new_times[idx_target])
-        # print("new_times j: ", new_times[idx_target][j])
+        print("new_times idx_target: ", new_times[idx_target])
+        print("new_times j: ", new_times[idx_target][j])
         if new_times[idx_target][j][2] != 0:
             input_times.append([])
             time_minus_tide_period = times[j][new_times[idx_target][j][2]]
@@ -296,9 +291,9 @@ def build1_input(new_times, times, values, idx_target, tide_period, run_periods_
                         increment = increment + 1
                         input_idx = input_idx - 1
                 
-                # print("final_idx: ", final_idx)
-                # print("input_idx: ", input_idx)
-                # time.sleep(3000000000000)
+                print("final_idx: ", final_idx)
+                print("input_idx: ", input_idx)
+                time.sleep(3000000000000)
 
                 last_val = input_idx
                 input_times[j].append(times[j][input_idx])
