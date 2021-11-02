@@ -155,7 +155,7 @@ def calculate_cdf(model, ann_cfg, i):
         x, y = bin_edges[:], cs / cs[-1]
         cdf = dict(x=x, y=y)
 
-        """
+        
         # -----------------------------------HISTOGRAM------------------------------------------
         plt.figure(figsize=(12.0, 3.2))
         plt.ylabel('Density')
@@ -176,7 +176,7 @@ def calculate_cdf(model, ann_cfg, i):
         plt.gca().spines['right'].set_visible(False)
         plt.gca().spines['top'].set_visible(False)
         plt.savefig(save_folder + "pdf.png", bbox_inches='tight', dpi=150, block=False)
-        plt.show()
+        # plt.show()
         plt.clf()
 
         # ------------------------------------CDF FIT-------------------------------------------
@@ -190,13 +190,13 @@ def calculate_cdf(model, ann_cfg, i):
         plt.gca().spines['right'].set_visible(False)
         plt.gca().spines['top'].set_visible(False)
         plt.savefig(save_folder + "cdf.png", bbox_inches='tight', dpi=150, block=False)
-        plt.clf()
+        # plt.clf()
         # plt.show()
 
         # --------------------------------PROBABILITY CALC--------------------------------------
         # input = [0.005,0.01,0.05,0.1,0.3,0.5,0.8,1,2,4,6,8,10]
         # output = [cdf['y'][np.searchsorted(cdf['x'], i, side="left") - 1] for i in input]
-        """
+        
 
         return cdf
 

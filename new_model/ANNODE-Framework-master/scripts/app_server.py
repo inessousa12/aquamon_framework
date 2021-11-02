@@ -2,6 +2,7 @@ import json
 import os
 import threading
 import time
+import sys
 from datetime import datetime
 from multiprocessing import Queue
 import Pyro4
@@ -28,21 +29,24 @@ class Server(object):
 
 
 def start_server():
-    sensor_handler = SensorHandler(750, 10, 0, cdf_threshold=0.9985, ignore_miss=True)
+    if len(sys.argv) == 2:
+        approach = sys.argv[1]
+        #cdf_threshold=0.9985
+        sensor_handler = SensorHandler(750, 10, 0, approach, cdf_threshold=0.9985, ignore_miss=True)
 
-    readerThread = threading.Thread(target=queue_reader_thread, args=(dataQueue, sensor_handler,))
-    readerThread.start()
+        readerThread = threading.Thread(target=queue_reader_thread, args=(dataQueue, sensor_handler,))
+        readerThread.start()
 
-    logThread = threading.Thread(target=log_thread, args=(sensor_handler,))
-    logThread.start()
+        logThread = threading.Thread(target=log_thread, args=(sensor_handler,))
+        logThread.start()
 
-    daemon = Pyro4.Daemon()
-    ns = Pyro4.locateNS()
-    uri = daemon.register(Server)
-    ns.register('aquamon.server', str(uri))
-    now = datetime.now()
-    print(f'[{now:%Y-%m-%d  %H:%M:%S}] Server ready')
-    daemon.requestLoop()
+        daemon = Pyro4.Daemon()
+        ns = Pyro4.locateNS()
+        uri = daemon.register(Server)
+        ns.register('aquamon.server', str(uri))
+        now = datetime.now()
+        print(f'[{now:%Y-%m-%d  %H:%M:%S}] Server ready')
+        daemon.requestLoop()
 
 
 def queue_reader_thread(queue, sensorHandler):

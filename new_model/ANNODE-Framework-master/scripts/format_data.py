@@ -7,6 +7,7 @@ import numpy as np
 import time
 
 import io_data
+import entry_vectors
 
 
 def build(data_cfg):
@@ -114,7 +115,8 @@ def build_new_times(sizes, times, skip_period, tide_period):
     # final_init_time = tempo inicial + periodo de mare
     final_init_time = times[0][real_init_time_idx]
     # com minutos
-    final_init_time = final_init_time + (tide_period / float(1440))
+    # final_init_time = final_init_time + (tide_period / float(1440))
+    final_init_time = final_init_time + (tide_period * 60)
     final_init_time_idx = np.searchsorted(times_target_sensor, final_init_time, side="right")
 
     # encontra o timestep inicial para comecar a corrida
@@ -147,7 +149,8 @@ def build_new_times(sizes, times, skip_period, tide_period):
         val = times[0][i]
 
         # Use skip_period to skip unwanted values Example: (3min-3min) -> (12min-12min)
-        diff = float(val - last_times) * (60 * 1440)
+        # diff = float(val - last_times) * (60 * 1440)
+        diff = float(val - last_times) * 60
         if skip_period > 0 and last_times != -1 and diff < (skip_period * 60):
             count_diff += 1
             continue
@@ -178,7 +181,8 @@ def build_new_times(sizes, times, skip_period, tide_period):
 
                 if idx_tmp > -1:
                     # calculates the diff in seconds between neighbour timestamp and target
-                    difference = float(times[0][i] - times[j][idx_tmp - 1]) * (60 * 1440)
+                    # difference = float(times[0][i] - times[j][idx_tmp - 1]) * (60 * 1440)
+                    difference = float(times[0][i] - times[j][idx_tmp - 1]) * 60
                     new_times[t][j].append(times[j][idx_tmp - 1])
                     new_times[t][j].append(difference)
                     new_times[t][j].append(idx_tmp - 1)
@@ -193,130 +197,31 @@ def build_new_times(sizes, times, skip_period, tide_period):
     return new_times
 
 
-def build1_input(new_times, times, values, idx_target, tide_period, run_periods_self, run_periods_others):
-
-    if run_periods_self > 0:
-        start = run_periods_self
-    else:
-        start = run_periods_others
-
-    inputs = []
-    input_times = []
-
-    if new_times[idx_target][0][2] != 0:
-
-        time_minus_tide_period = times[0][new_times[idx_target][0][2] - 1]
-        time_minus_tide_period = time_minus_tide_period - (tide_period / float(1440))
-        tmp = times[0][:]
-
-        first_idx = np.searchsorted(tmp, time_minus_tide_period, side="right")
-        if first_idx == len(tmp):
-            first_idx = -1
-        else:
-            first_idx -= 1
-
-        # confirmar
-        if first_idx < 0:
-            first_idx = 0
-
-        final_idx = new_times[idx_target][0][2] - 1
-
-        if final_idx < 0:
-            final_idx = 0
-
-        diff_between_idxs = final_idx - first_idx
-        linear_times_array = np.ceil(
-            np.exp(np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_self))) - 1
-        last_val = 0
-        increment = 0
-
-        input_times.append([])
-        for k in range(0, run_periods_self):
-            if run_periods_self == 1:
-                input_idx = final_idx
-            else:
-                input_idx = int(final_idx - linear_times_array[k] - increment)
-                
-                # para nao ter valores repetidos
-                if input_idx == last_val:
-                    increment = increment + 1
-                    input_idx = input_idx - 1
-
-            # print("final_idx: ", final_idx)
-            # print("input_idx: ", input_idx)
-            # time.sleep(5)
-
-            last_val = input_idx
-            input_times[0].append(times[0][input_idx])
-            inputs.append(values[0][input_idx])
-
-    # print(times)
-    # print(len(times))
-    # time.sleep(5)
-
-    for j in range(1, len(times)):
-        print("new_times idx_target: ", new_times[idx_target])
-        print("new_times j: ", new_times[idx_target][j])
-        if new_times[idx_target][j][2] != 0:
-            input_times.append([])
-            time_minus_tide_period = times[j][new_times[idx_target][j][2]]
-            time_minus_tide_period = time_minus_tide_period - (tide_period / float(1440))
-            tmp = times[j][:]
-
-            first_idx = np.searchsorted(tmp, time_minus_tide_period, side="right")
-            if first_idx == len(tmp):
-                first_idx = -1
-            else:
-                first_idx -= 1
-
-            final_idx = new_times[idx_target][j][2]
-
-            diff_between_idxs = final_idx - first_idx
-            
-
-            linear_times_array = np.ceil(
-                np.exp(np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_others))) - 1
-
-            last_val = 0
-            increment = 0
-
-            for k in range(0, run_periods_others):
-                if run_periods_others == 1:
-                    input_idx = final_idx
-                else:
-                    input_idx = int(final_idx - linear_times_array[k] - increment)
-
-                    # para nao ter valores repetidos
-                    if input_idx == last_val:
-                        increment = increment + 1
-                        input_idx = input_idx - 1
-                
-                print("final_idx: ", final_idx)
-                print("input_idx: ", input_idx)
-                time.sleep(3000000000000)
-
-                last_val = input_idx
-                input_times[j].append(times[j][input_idx])
-                inputs.append(values[j][input_idx])
-
-    return inputs, input_times
-
-
 def generate1(target_time, sizes, times, values, tide_period, skip_period,run_periods_self,
-              run_periods_others, new_times=None):
+              run_periods_others, approach, new_times=None):
+    # print("generate")
     if new_times is None:
         new_times = build_new_times(sizes, times, skip_period, tide_period)
 
-    idx_target = None
-    for i in range(len(new_times)):
-        time = new_times[i][0][0]
-        if time == target_time:
-            idx_target = i
+    # print(new_times)
+    time.sleep(0.1)
 
+    idx_target = None
+    
+    for i in range(len(new_times)):
+        times_g = new_times[i][0][0]
+        if times_g == target_time:
+            idx_target = i
+    # print(idx_target)
     if idx_target is None:
         return None, None
-    input, input_times = build1_input(new_times, times, values, idx_target, tide_period,
-                                      run_periods_self, run_periods_others)
+    # print("aqui")
+    input, input_times = entry_vectors.build1_input(new_times, times, values, idx_target, tide_period,
+                                      run_periods_self, run_periods_others, approach)
+    # print("aqui2")
+
+    # print(input)
+    # time.sleep(3)
 
     #input = [None if isnan(i) else i for i in input]
     return input, input_times

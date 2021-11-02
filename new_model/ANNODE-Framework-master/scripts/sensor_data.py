@@ -208,7 +208,7 @@ class SensorData:
 
 
 class SensorHandler:
-    def __init__(self, tide_period, run_periods_self, run_periods_others, cdf_threshold=0.998, skip_period=0, ignore_miss=False):
+    def __init__(self, tide_period, run_periods_self, run_periods_others, approach, cdf_threshold=0.998, skip_period=0, ignore_miss=False):
         # Data Arch
         self.sensors_data = {}
         self.tide_period = tide_period
@@ -216,6 +216,7 @@ class SensorHandler:
         self.run_periods_others = run_periods_others
         self.skip_period = skip_period
         self.ignore_miss = ignore_miss
+        self.approach = approach
 
         # Prediction Thread (generates predictions every time it is possible)
         self.predictions_data = {}  # {key=sensor, value={key=index, value=[(path, type, p)]}}
@@ -238,7 +239,25 @@ class SensorHandler:
     def __str__(self):
         str = ""
         for sensor in self.sensors_data:
-            print(self.sensors_data[sensor].get_values_in_csv())
+            self.sensors_data[sensor].get_values_in_csv()
+            print("outfile values done")
+
+            with open('./data/lnec/lnec_out_file_predictions.csv', 'w', encoding='UTF8', newline='') as f:
+                # create the csv writer
+                writer = csv.writer(f)
+
+                values = []
+                times = []
+                for key in self.predictions_data[sensor]:
+                    values.append(self.predictions_data[sensor][key][0][2])
+                    times.append(self.predictions_data[sensor][key][0][3])
+
+                zipped = list(zip(times, values))
+
+                for elem in zipped:
+                    writer.writerow(elem)
+                print("outfile predictions done")
+                print(len(values))
         return str
 
     def append(self, data):
@@ -258,33 +277,46 @@ class SensorHandler:
         while True:
             values = self.prediction_queue.get()
             inserted_values_indexes = values[0]
+            # print(values)
+            # time.sleep(3)
             sensor = values[1]
 
-            for index in inserted_values_indexes:
-                values = self.prediction_block.try_prediction(index, sensor, self.sensors_data, self.tide_period,
-                                                              self.run_periods_self, self.run_periods_others,
-                                                              self.skip_period, self.ignore_miss)
-                
-                if len(values) > 0:
-                    if index not in self.predictions_data[sensor]:
-                        self.predictions_data[sensor][index] = []
-                    self.predictions_data[sensor][index].extend(values)
-                    self.quality_queue.put((sensor, index))
+            if len(inserted_values_indexes) == 1:
+                for index in inserted_values_indexes:
+                    values = self.prediction_block.try_prediction(index, sensor, self.sensors_data, self.tide_period,
+                                                                self.run_periods_self, self.run_periods_others,
+                                                                self.skip_period, self.ignore_miss, self.approach)
+                    
+                    
+                    if len(values) > 0:
+                        if index not in self.predictions_data[sensor]:
+                            self.predictions_data[sensor][index] = []
+                        self.predictions_data[sensor][index].extend(values)
+                        self.quality_queue.put((sensor, index))
 
     def __quality_t(self):
         while True:
             sensor, index = self.quality_queue.get()
             predictions = self.predictions_data[sensor][index]
             actual = self.sensors_data[sensor].get(index)
+            # print(actual)
+            # time.sleep(3)
 
             quality = 1
             if actual['value'] is None:
                 quality = 0
             elif not actual['prediction']:
+                # print("AQUI")
                 m = actual['value']
                 p = [i[2] for i in predictions]
-                errors = self.quality_block.calculate_error(m, p)
+                # print("m: ", m)
+                # print("p: ", p)
+                # time.sleep(3)
+                errors = self.quality_block.calculate_error(m, p)  #erro quadrático
+                # print("errors: ", errors)
                 faulty, probabilities = self.quality_block.fault_detection(predictions, errors)
+                # print("faulty: ", faulty)
+                # time.sleep(5)
 
                 to_replace = False
                 if not faulty:
@@ -302,6 +334,7 @@ class SensorHandler:
                     to_replace = True
 
                 if to_replace:
+                    print("ENTROU")
                     mean_predictions = statistics.mean(p)
                     self.sensors_data[sensor].put_prediction(mean_predictions, index)
 
@@ -317,7 +350,7 @@ class QualityBlock:
         return load_processed([path + "\\cdf.npz"])
 
     @staticmethod
-    def calculate_cdf_probability(x, cdf):
+    def calculate_cdf_probability(x, cdf):        
         x_index = np.searchsorted(cdf['x'], x, side="left")
 
         if x_index == len(cdf['y']):
@@ -347,6 +380,8 @@ class QualityBlock:
 
             probability = self.calculate_cdf_probability(error, cdf)
             probabilities.append(probability)
+            # print("probability: ", probability)
+            # time.sleep(3)
 
             if probability < threshold:
                 isSimilar.append((True, error, probability, ann_type))
@@ -354,62 +389,63 @@ class QualityBlock:
                 isSimilar.append((False, error, probability, ann_type))
 
         falses = [i for i in isSimilar if i[0] is False]
+        # print(len(falses))
         trues = [i for i in isSimilar if i[0] is True]
-        if len(falses) > 0:
-            if len(falses) == 1:
-                """
-                Different from 1 prediction.
+        # if len(falses) > 0:
+        if len(falses) == 1:
+            """
+            Different from 1 prediction.
 
-                @Goncalo
-                We start by considering the case where a single prediction is different from m. This can be the
-                prediction that was produced based on past measurements of only the target sensor, the prediction
-                that uses measurements from target and neighbour sensors, or, finally, the prediction based only
-                on measurements from neighbour sensors. In the first case, it is possible to conclude with a high
-                probability that the target sensor is being affected by a real physical event that produces a large
-                difference with respect to past values, hence the measurement is not an outlier. This is supported
-                by the fact that this event was reflected in the measurements of the other sensors and consequently
-                on the predictions that use these measurements, both of which similar to m.
+            @Goncalo
+            We start by considering the case where a single prediction is different from m. This can be the
+            prediction that was produced based on past measurements of only the target sensor, the prediction
+            that uses measurements from target and neighbour sensors, or, finally, the prediction based only
+            on measurements from neighbour sensors. In the first case, it is possible to conclude with a high
+            probability that the target sensor is being affected by a real physical event that produces a large
+            difference with respect to past values, hence the measurement is not an outlier. This is supported
+            by the fact that this event was reflected in the measurements of the other sensors and consequently
+            on the predictions that use these measurements, both of which similar to m.
 
-                @Joao
-                Anything new to the logic of fault detection is added here
-                """
-                return False, probabilities
-            elif len(falses) == 2:
-                """
-                Different from 2 predictions.
+            @Joao
+            Anything new to the logic of fault detection is added here
+            """
+            return True, probabilities #estava a False
+        elif len(falses) == 2:
+            """
+            Different from 2 predictions.
 
-                @Goncalo
-                If m is significantly different from two predictions (and hence similar to a singular prediction),
-                then only two cases are relevant and one is unlikely to occur. If m is similar to the prediction
-                based on the target measurements, then the measurement is likely correct and the difference with
-                the other predictions can be explained by an event affecting the neighbour sensors or a severe
-                fault affecting only one of them. If m is similar to the prediction based only on the neighbours
-                measurements, then it is possible to conclude that an event is forcing all measurements to take
-                unexpected values. The prediction based only on neighbour sensors uses as input these unexpected
-                values, which justifies that it is similar to m. On the other hand, the other predictions include the
-                target past measurements that force the model to produce a value that is closer to the one that
-                would be expected without an event. The case in which m is similar only to the prediction using all
-                sensors is unlikely to occur because it does not make sense that a prediction using only neighbour
-                sensors and the prediction using only the target sensor are similar to m but that one is not. 
+            @Goncalo
+            If m is significantly different from two predictions (and hence similar to a singular prediction),
+            then only two cases are relevant and one is unlikely to occur. If m is similar to the prediction
+            based on the target measurements, then the measurement is likely correct and the difference with
+            the other predictions can be explained by an event affecting the neighbour sensors or a severe
+            fault affecting only one of them. If m is similar to the prediction based only on the neighbours
+            measurements, then it is possible to conclude that an event is forcing all measurements to take
+            unexpected values. The prediction based only on neighbour sensors uses as input these unexpected
+            values, which justifies that it is similar to m. On the other hand, the other predictions include the
+            target past measurements that force the model to produce a value that is closer to the one that
+            would be expected without an event. The case in which m is similar only to the prediction using all
+            sensors is unlikely to occur because it does not make sense that a prediction using only neighbour
+            sensors and the prediction using only the target sensor are similar to m but that one is not. 
 
-                @Joao
-                Anything new to the logic of fault detection is added here
-                """
-                return False, probabilities
-            else:
-                """
-                Different from all predictions.
-
-                @Goncalo
-                Finally, the situation that is indicative of a faulty measurement m is the last possible one, when
-                all predictions are different from m.
-
-                @Joao
-                Anything new to the logic of fault detection is added here
-                """
-                return True, probabilities
-        else:
+            @Joao
+            Anything new to the logic of fault detection is added here
+            """
             return False, probabilities
+        else:
+            """
+            Different from all predictions.
+
+            @Goncalo
+            Finally, the situation that is indicative of a faulty measurement m is the last possible one, when
+            all predictions are different from m.
+
+            @Joao
+            Anything new to the logic of fault detection is added here
+            """
+            return False, probabilities #estava a True
+        # else:
+        #     return False, probabilities
 
     def quality_calculation(self, probabilities):
         return 1 - statistics.mean(probabilities)
@@ -439,18 +475,20 @@ class PredictionBlock:
         return None
 
     def try_prediction(self, appended_index, sensor, sensors, tide_period, run_periods_self,
-                       run_periods_others, skip_period, ignore_miss):
+                       run_periods_others, skip_period, ignore_miss, approach):
         
         # Check if we have atleast 750min of data (1tide period)
         sensor_names = list(sensors.keys())
-        min_time = sensors[sensor].get(0)["time"] + ((tide_period+50) / float(1440))
+        # min_time = sensors[sensor].get(0)["time"] + ((tide_period+50) / float(1440))  for previous datetimes
+        min_time = sensors[sensor].get(0)["time"] + ((tide_period+50) * 60)
         target_time = sensors[sensor].get(appended_index)["time"]
         diff = target_time - min_time
         if diff > 0:
             diffs = []
             
             for sn in sensor_names:
-                current_min_time = sensors[sn].get(0)["time"] + ((tide_period+50) / float(1440))
+                # current_min_time = sensors[sn].get(0)["time"] + ((tide_period+50) / float(1440))
+                current_min_time = sensors[sn].get(0)["time"] + ((tide_period+50) * 60)
                 current_diff = target_time - current_min_time
                 diffs.append(current_diff)
             diffs = [i for i in diffs if i > 0]
@@ -470,16 +508,19 @@ class PredictionBlock:
 
         for sensor_name in sensor_names:
             if not ignore_miss:
+                # time.sleep(5)
                 temp_v, temp_t = sensors[sensor_name].get_values()
                 values.append(temp_v)
                 times.append(temp_t)
             else:
+                # time.sleep(5)
                 temp_v, temp_t = sensors[sensor_name].get_raw_values()
                 #sensors[sensor_name].get_raw_values_w_predictions()
                 values.append(temp_v)
                 times.append(temp_t)
         # print("BEFORE")
         # print(values)
+        # time.sleep(3)
         # print(times)
         
         # Switch sensor[0] to the main sensor
@@ -491,7 +532,7 @@ class PredictionBlock:
         times[0] = times[main_sensor_index]
         times[main_sensor_index] = tmp
         # Convert to numpy array
-        print(len(values))
+        # print(len(values))
         for i in range(len(values)):
             values[i] = np.asarray(values[i])
             times[i] = np.asarray(times[i])
@@ -501,14 +542,20 @@ class PredictionBlock:
         # print("AFTER")
         # print(values)
         # print(times)
-        time.sleep(500)
+        # time.sleep(500)
 
         sizes = [len(i) for i in values]
+
         
+        # print("aqui")
         input_values, input_times = generate1(target_time, sizes, times, values, tide_period, skip_period,
-                                              run_periods_self, run_periods_others)
+                                              run_periods_self, run_periods_others, approach)
+        # print("aqui2")
+        # print(input_values)
+        # time.sleep(3)
 
         predictions = []
+        # print(input_values is not None)
         if input_values is not None:
             inputs = input_values
             inputs_self = inputs[:run_periods_self]
@@ -520,6 +567,7 @@ class PredictionBlock:
             session = False
             ann_type = []
             if None in inputs:
+                
                 if None not in inputs_self:
                     self_model = self.get_model(sensor, sensors[sensor].type, 'self')
                     if self_model is not None:
@@ -533,6 +581,7 @@ class PredictionBlock:
                         to_input.append(inputs_others)
                         ann_type = ['neighbours']
             else:
+                
                 all_model = self.get_model(sensor, sensors[sensor].type, 'all')
                 self_model = self.get_model(sensor, sensors[sensor].type, 'self')
                 others_model = self.get_model(sensor, sensors[sensor].type, 'neighbours')
@@ -555,16 +604,21 @@ class PredictionBlock:
                     path = models[i]['path']
                     model = models[i]['model']
                     inpt = to_input[i]
+                    # print(inpt)
+                    # time.sleep(3)
                     p = model.predict((inpt,))[0][0]
+                    # print(inpt)
+                    # print(p)
+                    # time.sleep(3)
                     predictions.append((path, ann_type[i], p, target_time))
 
                 del models
                 tf.keras.backend.clear_session()
 
-        if len(predictions) > 0:
-            print(predictions)
-            print(f"{len(predictions)} predictions calculated for {sensor} at {target_time}")
-
+        # if len(predictions) > 0:
+        #     print(predictions)
+        #     print(f"{len(predictions)} predictions calculated for {sensor} at {target_time}")
+        # time.sleep(5)
         return predictions
 
     @staticmethod

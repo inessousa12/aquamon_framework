@@ -133,6 +133,7 @@ def send(data, sleep_t):
         if last is None:
             last = current
 
+        # time.sleep(5)
         if sleep_t == 0:
             pass
         elif sleep_t > 0:
