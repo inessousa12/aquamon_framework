@@ -1,6 +1,7 @@
 import json
 import os
 import functions
+import align_times
 import sys
 from datetime import datetime
 from multiprocessing import Queue
@@ -45,7 +46,6 @@ def start_server():
         double = 0
 
         while True:
-
             #store data
             msg = dataQueue.get()
             data = json.loads(msg)
@@ -53,16 +53,29 @@ def start_server():
 
             # time.sleep(1)
 
-            sensor_data = sensor_handler.get_sensors_data()
-            for sensor in sensor_data:
-                pass
+            #check if there are enough values for a prediction
+            flag, new_times, sensor_values, sensor_times = align_times.check_new_times(sensor_handler)
 
-            #align times
-            new_times = functions.build_new_times(sizes, times, sensor_handler.get_skip_period(), sensor_handler.get_tide_period())
+            if flag:
+                #prediction block
+                values = sensor_handler.prediction_queue.get()
+                inserted_values_indexes = values[0]
+                sensor = values[1]
 
-            #prediction block
+                if len(inserted_values_indexes) == 1:
+                    for index in inserted_values_indexes:
+                        values = sensor_handler.prediction_block.try_prediction(index, sensor, sensor_handler.sensors_data, sensor_handler.tide_period,
+                                                                    sensor_handler.run_periods_self, sensor_handler.run_periods_others,
+                                                                    sensor_handler.skip_period, sensor_handler.ignore_miss, sensor_handler.approach, sensor_values, sensor_times)
+                        
+                        
+                        if len(values) > 0:
+                            if index not in sensor_handler.predictions_data[sensor]:
+                                sensor_handler.predictions_data[sensor][index] = []
+                            sensor_handler.predictions_data[sensor][index].extend(values)
+                            sensor_handler.quality_queue.put((sensor, index))
 
-            #quality block
+                #quality block
 
             #output
             msg = ''

@@ -29,77 +29,11 @@ class PredictionBlock:
         return None
 
     def try_prediction(self, appended_index, sensor, sensors, tide_period, run_periods_self,
-                       run_periods_others, skip_period, ignore_miss, approach):
-        
-        # Check if we have atleast 750min of data (1tide period)
-        sensor_names = list(sensors.keys())
-        # min_time = sensors[sensor].get(0)["time"] + ((tide_period+50) / float(1440))  for previous datetimes
-        min_time = sensors[sensor].get(0)["time"] + ((tide_period+50) * 60)
+                       run_periods_others, skip_period, ignore_miss, approach, values, times):
+
         target_time = sensors[sensor].get(appended_index)["time"]
-        diff = target_time - min_time
-        if diff > 0:
-            diffs = []
-            
-            for sn in sensor_names:
-                # current_min_time = sensors[sn].get(0)["time"] + ((tide_period+50) / float(1440))
-                current_min_time = sensors[sn].get(0)["time"] + ((tide_period+50) * 60)
-                current_diff = target_time - current_min_time
-                diffs.append(current_diff)
-            diffs = [i for i in diffs if i > 0]
-
-            if len(diffs) != len(sensor_names):
-                return []
-        else:
-            return []
-
-        # Order by name
-        sensor_names.sort()
-
-        main_sensor_index = sensor_names.index(sensor)
-        values = []
-        times = []
-        
-
-        for sensor_name in sensor_names:
-            if not ignore_miss:
-                # time.sleep(5)
-                temp_v, temp_t = sensors[sensor_name].get_values()
-                values.append(temp_v)
-                times.append(temp_t)
-            else:
-                # time.sleep(5)
-                temp_v, temp_t = sensors[sensor_name].get_raw_values()
-                #sensors[sensor_name].get_raw_values_w_predictions()
-                values.append(temp_v)
-                times.append(temp_t)
-        # print("BEFORE")
-        # print(values)
-        # time.sleep(3)
-        # print(times)
-        
-        # Switch sensor[0] to the main sensor
-        tmp = np.copy(values[0])
-        values[0] = values[main_sensor_index]
-        values[main_sensor_index] = tmp
-
-        tmp = np.copy(times[0])
-        times[0] = times[main_sensor_index]
-        times[main_sensor_index] = tmp
-        # Convert to numpy array
-        # print(len(values))
-        for i in range(len(values)):
-            values[i] = np.asarray(values[i])
-            times[i] = np.asarray(times[i])
-
-        values = np.asarray(values)
-        times = np.asarray(times)
-        # print("AFTER")
-        # print(values)
-        # print(times)
-        # time.sleep(500)
-
         sizes = [len(i) for i in values]
-
+        
         
         # print("aqui")
         input_values, input_times = functions.generate1(target_time, sizes, times, values, tide_period, skip_period,

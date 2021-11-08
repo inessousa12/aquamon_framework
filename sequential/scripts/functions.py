@@ -131,7 +131,7 @@ def build_multiple(raw_folder, save_folder, run_periods_self, run_periods_others
         print("->", sensors[i], "DONE")
 
 
-def build_new_times(sizes, times, skip_period, tide_period):
+def build_new_times(times, sizes, skip_period, tide_period):
     # finds the first real init_time
     # [row[0] for row in times] -> column 0 (4 primeiros idx)
     times_first = [row[0] for row in times]
