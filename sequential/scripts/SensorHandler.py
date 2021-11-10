@@ -21,20 +21,13 @@ class SensorHandler:
         # Prediction Thread (generates predictions every time it is possible)
         self.predictions_data = {}  # {key=sensor, value={key=index, value=[(path, type, p)]}}
         self.prediction_block = PredictionBlock()
+        self.prediction_queue = Queue(maxsize=1000)
 
         # Quality calculation & Failure Detection
         self.quality_data = {}  # {key=sensor, value={key=index, value=quality}}
         self.cdf_threshold = cdf_threshold
         self.quality_block = QualityBlock(self.cdf_threshold)
-
-        # Threads
-        # self.prediction_queue = Queue(maxsize=1000)
-        # self.__prediction_thread = threading.Thread(target=self.__prediction_t)
-        # self.__prediction_thread.start()
-
-        # self.quality_queue = Queue(maxsize=1000)
-        # self.__quality_thread = threading.Thread(target=self.__quality_t)
-        # self.__quality_thread.start()
+        self.quality_queue = Queue(maxsize=1000)
 
     def get_tide_period(self):
         return self.tide_period
@@ -50,6 +43,12 @@ class SensorHandler:
 
     def get_sensors_data(self):
         return self.sensors_data
+
+    def get_approach(self):
+        return self.approach
+
+    def get_prediction_queue(self):
+        return self.prediction_queue.get_nowait()
 
     def __str__(self):
         str = ""

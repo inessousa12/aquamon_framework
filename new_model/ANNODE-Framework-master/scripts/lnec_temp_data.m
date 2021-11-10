@@ -24,12 +24,12 @@
 
 % Import the data
 format long
-lnectempdata = readtable("C:\Users\iness\Desktop\aquamon_framework\new_model\ANNODE-Framework-master\data\lnec\lnec_out_file_predictions.csv");
+lnectempdata = readtable("C:\Users\iness\Desktop\aquamon_framework\sequential\data\lnec\lnec_out_file.csv");
 %p=posixtime(datetime(lnectempdata{:,1}, "InputFormat", "dd-MM-yy HH:mm"));
-p=lnectempdata{:,1}
+p=lnectempdata{:,1};
 q=lnectempdata{:,2};
 data = [reshape(p.', [], 1), reshape(q.', [], 1)];
-save('C:\Users\iness\Desktop\aquamon_framework\new_model\ANNODE-Framework-master\data\lnec\lnec_out_file_predictions.mat','data')
+save('C:\Users\iness\Desktop\aquamon_framework\sequential\data\lnec\lnec_out_file.mat','data')
 
 %% Clear temporary variables
 clear opts

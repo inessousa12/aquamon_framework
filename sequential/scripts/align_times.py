@@ -1,8 +1,12 @@
 import functions
+import queue
 import numpy as np
 
 def check_new_times(sensor_handler):
-    values = sensor_handler.prediction_queue.get()
+    try:
+        values = sensor_handler.get_prediction_queue()
+    except queue.Empty:
+        return False, None, None, None, None, None
     inserted_values_indexes = values[0]
     sensor = values[1]
 
@@ -24,9 +28,9 @@ def check_new_times(sensor_handler):
             diffs = [i for i in diffs if i > 0]
 
             if len(diffs) != len(sensor_names):
-                return False, None, None, None
+                return False, None, None, None, None, None
         else:
-            return False, None, None, None
+            return False, None, None, None, None, None
 
     times = []
     values = []
@@ -66,6 +70,6 @@ def check_new_times(sensor_handler):
     new_times = functions.build_new_times(times, sizes, sensor_handler.get_skip_period(), sensor_handler.get_tide_period())
 
     if len(new_times) >= 10:
-        return True, new_times, values, times
+        return True, new_times, values, times, inserted_values_indexes, sensor
     else:
-        return False, None, None, None
+        return False, None, None, None, None, None

@@ -28,22 +28,19 @@ class PredictionBlock:
                 return best_model
         return None
 
-    def try_prediction(self, appended_index, sensor, sensors, tide_period, run_periods_self,
-                       run_periods_others, skip_period, ignore_miss, approach, values, times):
+    def try_prediction(self, appended_index, sensor, sensor_handler, values, times, new_times):
+
+        sensors = sensor_handler.get_sensors_data()
 
         target_time = sensors[sensor].get(appended_index)["time"]
         sizes = [len(i) for i in values]
-        
-        
-        # print("aqui")
-        input_values, input_times = functions.generate1(target_time, sizes, times, values, tide_period, skip_period,
-                                              run_periods_self, run_periods_others, approach)
-        # print("aqui2")
-        # print(input_values)
-        # time.sleep(3)
+
+        input_values, input_times = functions.generate1(target_time, sizes, times, values, sensor_handler, new_times)
+
+        run_periods_self = sensor_handler.get_run_periods_self()
 
         predictions = []
-        # print(input_values is not None)
+
         if input_values is not None:
             inputs = input_values
             inputs_self = inputs[:run_periods_self]
@@ -52,10 +49,8 @@ class PredictionBlock:
             models = []
             to_input = []
 
-            session = False
             ann_type = []
             if None in inputs:
-                
                 if None not in inputs_self:
                     self_model = self.get_model(sensor, sensors[sensor].type, 'self')
                     if self_model is not None:
@@ -69,7 +64,6 @@ class PredictionBlock:
                         to_input.append(inputs_others)
                         ann_type = ['neighbours']
             else:
-                
                 all_model = self.get_model(sensor, sensors[sensor].type, 'all')
                 self_model = self.get_model(sensor, sensors[sensor].type, 'self')
                 others_model = self.get_model(sensor, sensors[sensor].type, 'neighbours')
@@ -92,12 +86,7 @@ class PredictionBlock:
                     path = models[i]['path']
                     model = models[i]['model']
                     inpt = to_input[i]
-                    # print(inpt)
-                    # time.sleep(3)
                     p = model.predict((inpt,))[0][0]
-                    # print(inpt)
-                    # print(p)
-                    # time.sleep(3)
                     predictions.append((path, ann_type[i], p, target_time))
 
                 del models

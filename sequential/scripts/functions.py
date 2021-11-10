@@ -227,33 +227,19 @@ def build_new_times(times, sizes, skip_period, tide_period):
     return new_times
 
 
-def generate1(target_time, sizes, times, values, tide_period, skip_period,run_periods_self,
-              run_periods_others, approach, new_times=None):
-    # print("generate")
-    if new_times is None:
-        new_times = build_new_times(sizes, times, skip_period, tide_period)
-
-    # print(new_times)
-    time.sleep(0.1)
-
+def generate1(target_time, sizes, times, values, sensor_handler, new_times):
     idx_target = None
     
     for i in range(len(new_times)):
         times_g = new_times[i][0][0]
         if times_g == target_time:
             idx_target = i
-    # print(idx_target)
+
     if idx_target is None:
         return None, None
-    # print("aqui")
-    input, input_times = entry_vectors.build1_input(new_times, times, values, idx_target, tide_period,
-                                      run_periods_self, run_periods_others, approach)
-    # print("aqui2")
 
-    # print(input)
-    # time.sleep(3)
+    input, input_times = entry_vectors.build1_input(new_times, times, values, idx_target, sensor_handler)
 
-    #input = [None if isnan(i) else i for i in input]
     return input, input_times
 
 
