@@ -6,11 +6,20 @@ import json
 import functions
 
 class PredictionBlock:
+    """
+    Prediction Block class.
+    """
     def __init__(self):
+        """
+        Initializes Prediction Block class
+        """
         self.models = self.startup_models()
         pass
 
     def get_model(self, sensor, typeM, size):
+        """
+        Gets the best model for the prediction
+        """
         if size == "others":
             sizeM = "neighbours"
         else:
@@ -29,14 +38,28 @@ class PredictionBlock:
         return None
 
     def try_prediction(self, appended_index, sensor, sensor_handler, values, times, new_times):
+        """
+        Tries o make a prediction.
+
+        Args:
+            appended_index ([int]): target index
+            sensor ([str]): sensor's name
+            sensor_handler ([SensorHandler]): SensorHandler object
+            values ([list]): list of values
+            times ([list]): list of times
+            new_times ([list]): list of aligned times
+
+        Returns:
+            [list]: list of predictions
+        """
 
         sensors = sensor_handler.get_sensors_data()
 
         target_time = sensors[sensor].get(appended_index)["time"]
         sizes = [len(i) for i in values]
 
-        input_values, input_times = functions.generate1(target_time, sizes, times, values, sensor_handler, new_times)
-
+        input_values, input_times = functions.generate1(target_time, times, values, sensor_handler, new_times)
+        
         run_periods_self = sensor_handler.get_run_periods_self()
 
         predictions = []
@@ -100,6 +123,9 @@ class PredictionBlock:
 
     @staticmethod
     def startup_models():
+        """
+        Gets models using keras.
+        """
         models = {}
         models_folder = f'./ann/models/'
         folders_found = os.listdir(models_folder)

@@ -5,7 +5,17 @@ from tensorflow import keras
 import csv
 
 class SensorData:
+    """
+    SensorData class. Stores raw data from a sensor.
+    """
+
     def __init__(self, sensor):
+        """
+        Initializes the SensorData class.
+
+        Args:
+            sensor ([str]): Sensor's name
+        """
         self.sensor_name = sensor
         self.type = ""
 
@@ -19,18 +29,21 @@ class SensorData:
         self.__init_buffer = []
         self.__init_ok = False
 
-    # def __str__(self):
-    #     str = "Data: ", self.get_values()
-    #     return str
-
     def __populate(self):
+        """
+        Populates list according to the initial buffer.
+
+        Returns:
+            [list]: list of appended indexes
+        """
         intervals = {}
         for i in range(len(self.__init_buffer) - 1):
             a_time = self.__init_buffer[i]["time"]
             b_time = self.__init_buffer[i + 1]["time"]
 
             interval = b_time - a_time
-            interval = round(int(interval * (60 * 1440)), -1)
+            # interval = round(int(interval * (60 * 1440)), -1)
+            interval = round(int(interval * 60), -1)
             if str(interval) in intervals:
                 intervals[str(interval)] += 1
             else:
@@ -44,7 +57,8 @@ class SensorData:
             b_time = self.__init_buffer[i + 1]["time"]
 
             interval = b_time - a_time
-            interval = round(int(interval * (60 * 1440)), -1)
+            # interval = round(int(interval * (60 * 1440)), -1)
+            interval = round(int(interval * 60), -1)
 
             if interval == best_interval:
                 start_idx = i
@@ -59,10 +73,23 @@ class SensorData:
         return appended_indexes
 
     def append_raw(self, new_entry):
+        """
+        Appends raw measurement.
+
+        Args:
+            new_entry ([dict]): new raw measurement
+        """
         self.__raw_data.append(new_entry)
 
     def append(self, new_entry):
+        """Appends new entry.
 
+        Args:
+            new_entry ([dict]): new raw measurement
+
+        Returns:
+            [list]: list of appended indexes
+        """
         appended_indexes = []
         new_entry["prediction"] = False
 
@@ -82,7 +109,8 @@ class SensorData:
             if last_measurement is not None:
                 current_measurement_time = new_entry["time"]
                 last_measurement_time = last_measurement["time"]
-                current_time_difference = round((current_measurement_time - last_measurement_time) * (60 * 1440), 2)
+                # current_time_difference = round((current_measurement_time - last_measurement_time) * (60 * 1440), 2)
+                current_time_difference = round((current_measurement_time - last_measurement_time) * 60, 2)
 
                 # GET TIME STEP FROM FIRST TWO MEASUREMENTS
                 if self.frequency == -1:
@@ -106,14 +134,17 @@ class SensorData:
 
                         temp_multiplier = int(current_time_difference / self.frequency)
                         if temp_multiplier >= 1:
-                            multiplier = (self.frequency * temp_multiplier) / (60 * 1440)
+                            # multiplier = (self.frequency * temp_multiplier) / (60 * 1440)
+                            multiplier = (self.frequency * temp_multiplier) / 60
                             temp_time = last_measurement_time + multiplier
-                            t = (temp_time - current_measurement_time) * (60 * 1440)
+                            # t = (temp_time - current_measurement_time) * (60 * 1440)
+                            t = (temp_time - current_measurement_time) * 60
 
                             if 1.5 >= t >= -1.5:
                                 nones_to_insert = temp_multiplier - 1
                                 for i in range(nones_to_insert):
-                                    temp_time = last_measurement_time + (((i + 1) * self.frequency) / (60 * 1440))
+                                    # temp_time = last_measurement_time + (((i + 1) * self.frequency) / (60 * 1440))
+                                    temp_time = last_measurement_time + (((i + 1) * self.frequency) / 60)
                                     self.__data.append({"value": None, "time": temp_time, "prediction": False})
                                     appended_indexes.append(len(self.__data) - 1)
                                 to_append = True
@@ -133,34 +164,59 @@ class SensorData:
         return appended_indexes
 
     def getLast(self):
+        """
+        Gets last measurement
+        """
         if len(self.__data) == 0:
             return None
         else:
             return self.__data[self.__last_pointer]
 
     def get(self, idx):
+        """
+        Gets value in a certain index
+        """
         if idx <= len(self.__data) - 1:
             return self.__data[idx]
         else:
             return None
 
     def put_prediction(self, value, index):
+        """
+        Adds prediction to data dict.
+
+        Args:
+            value ([float]): prediction's value
+            index ([int]): prediction's index
+        """
         if index < len(self.__data):
             self.__data[index]["prediction"] = True
             self.__data[index]["true_value"] = copy.deepcopy(self.__data[index]["value"])
             self.__data[index]["value"] = value
 
     def get_values(self):
+        """
+        Gets all values and times received.
+        """
         return [i["value"] for i in self.__data], [i["time"] for i in self.__data]
 
     def get_raw_values(self):
+        """
+        Gets all raw measurements and times.
+        """
         return [i["value"] for i in self.__raw_data], [i["time"] for i in self.__raw_data]
 
     def get_raw_values_w_predictions(self):
+        """
+        Gets all values and times with predictions.
+        """
         return [i["value"] for i in self.__data if i["value"] is not None], \
             [i["time"] for i in self.__data if i["value"] is not None]
 
     def get_values_without_predictions(self):
+        """
+        Gets all values and times without predictions.
+        """
         values = []
         times = []
         for i in self.__data:
@@ -174,6 +230,9 @@ class SensorData:
         return values, times
 
     def get_values_in_csv(self):
+        """
+        Puts values and times in a csv
+        """
         with open('./data/lnec/lnec_out_file.csv', 'w', encoding='UTF8', newline='') as f:
             # create the csv writer
             writer = csv.writer(f)

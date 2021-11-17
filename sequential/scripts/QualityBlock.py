@@ -3,15 +3,38 @@ import numpy as np
 import functions
 
 class QualityBlock:
+    """
+    QualityBlock class.
+    """
+
     def __init__(self, cdf_threshold):
+        """
+        Initializes QualityBlock class.
+
+        Args:
+            cdf_threshold ([float]): cdf threshold
+        """
         self.cdf_threshold = cdf_threshold
 
     @staticmethod
     def load_cdf(path):
+        """
+        Loads cdf file.
+
+        Args:
+            path ([str]): sdf file's path
+        """
         return functions.load_processed([path + "\\cdf.npz"])
 
     @staticmethod
-    def calculate_cdf_probability(x, cdf):        
+    def calculate_cdf_probability(x, cdf):   
+        """
+        Calculates cdf probability.
+
+        Args:
+            x ([float]): difference between the measurement and the prediction
+            cdf ([dict]): cdf
+        """
         x_index = np.searchsorted(cdf['x'], x, side="left")
 
         if x_index == len(cdf['y']):
@@ -23,12 +46,26 @@ class QualityBlock:
 
     @staticmethod
     def calculate_error(actual, predictions):
+        """
+        Calculates the error between the measurement and the error
+
+        Args:
+            actual ([float]): actual value
+            predictions ([float]): predicted value
+        """
         errors = []
         for p in predictions:
             errors.append(pow(p - actual, 2))
         return errors
 
     def fault_detection(self, predictions, errors):
+        """
+        Checks the probability of a value to be an error.
+
+        Args:
+            predictions ([list]): list of predictions
+            errors ([list]): list of calculated errors
+        """
         threshold = self.cdf_threshold
 
         isSimilar = []
@@ -109,4 +146,10 @@ class QualityBlock:
         #     return False, probabilities
 
     def quality_calculation(self, probabilities):
+        """
+        Calculates the quality based on the predictions
+
+        Args:
+            probabilities ([list]): list of predictions
+        """
         return 1 - statistics.mean(probabilities)

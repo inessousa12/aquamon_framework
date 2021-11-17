@@ -1,19 +1,27 @@
 import json
 import time
 from datetime import datetime
+import socket as s
 
 import Pyro4
 import sys
 from os import listdir
 from os.path import isfile, join, isdir
+from Server import Server
 
-import functions
+import functions, globals
 
-NAME = "Simulator"
-server = Pyro4.Proxy(f'PYRONAME:aquamon.server')
+# NAME = "Simulator"
+# server = Pyro4.Proxy(f'PYRONAME:aquamon.server')
+
+HOST = '127.0.0.1'
+PORT = 9999
 
 
 def main():
+    """
+    Starts client and sends messages to server.
+    """
     if len(sys.argv) != 3:
         print("[ERROR] Only input two arguments: the path to the data you want to simulate, " + \
               "and the time in milliseconds (-1 = instant, 0 = real time).")
@@ -31,6 +39,15 @@ def main():
 
 
 def validate(path):
+    """
+    Checks if a file exists and returns its data
+
+    Args:
+        path ([str]): file's path
+
+    Returns:
+        [list]: data from file
+    """
     data = None
     if isdir(path):
         files_names = [f for f in listdir(path) if isfile(join(path, f))]
@@ -39,20 +56,25 @@ def validate(path):
         for file_name in files_names:
             if not len(file_name) > 4:
                 return data
-            str_end = file_name[-4:]
-            if not str_end == ".mat" and not str_end == ".npz":
+            str_end = file_name.split(".")[-1]
+            if not str_end == "mat" and not str_end == "npz" and not str_end == "json":
                 return data
 
         data = build_data(path)
-
-        #create new file with json
-        # with open('./scripts/json_lnec_data.json', 'w') as outfile:
-        #     json.dump(data, outfile)
 
     return data
 
 
 def build_data(path):
+    """
+    Gets data from file.
+
+    Args:
+        path ([str]): file's path
+
+    Returns:
+        [list]: data from file
+    """
     if "/" in path and path[-1] != "/":
         path += "/"
     elif path[-1] != "\\":
@@ -64,7 +86,7 @@ def build_data(path):
     for file_name in files_names:
         file_path = path + file_name
 
-        if ".mat" in file_name:
+        if ".mat" in file_name or ".json" in file_name:
             data_times, data_values = functions.load_raw(file_path)
         else:
             result = functions.load_processed([file_path])
@@ -94,6 +116,15 @@ def build_data(path):
 
 
 def popMultiple(data):
+    """
+    Pops next index from list.
+
+    Args:
+        data ([list]): list with data
+
+    Returns:
+        [str]: data
+    """
     next_idx = -1
     for i in range(len(data)):
         if len(data[i]) > 0:
@@ -109,6 +140,15 @@ def popMultiple(data):
 
 
 def is_empty(data):
+    """
+    Checks if list is empty
+
+    Args:
+        data ([list]): list with data
+
+    Returns:
+        [bool]: True if list is empty, False otherwise
+    """
     for d in data:
         if len(d) > 0:
             return False
@@ -116,17 +156,27 @@ def is_empty(data):
 
 
 def send(data, sleep_t):
+    """
+    Sends data to server with intervals.
+
+    Args:
+        data ([list]): list of data to send
+        sleep_t ([float]): interval's time
+    """
     now = datetime.now()
     msg = f'[{now:%Y-%m-%d %H:%M:%S}] Sending data...'
     print(msg)
-    server.connect_message(NAME)
+    # server.connect_message(NAME)
+    serv_sock = Server(HOST,PORT)
+    client_sock = serv_sock.connect_message()
 
     last = None
     current = None
     while not is_empty(data):
         item = popMultiple(data)
         msg = json.dumps(item)
-        server.send_message(msg)
+        # server.send_message(msg)
+        serv_sock.send_message(msg)
 
         current = item['time']
         if last is None:
@@ -138,7 +188,8 @@ def send(data, sleep_t):
         elif sleep_t > 0:
             time.sleep(sleep_t)
 
-    server.disconnect_message(NAME)
+    # server.disconnect_message(NAME)
+    client_sock.close()
 
 
 if __name__ == "__main__":

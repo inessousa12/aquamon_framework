@@ -7,11 +7,14 @@ import json
 from scipy.io import loadmat
 
 import numpy as np
-import time
+import datetime
 
 import entry_vectors
 
 def validate_ann_cfg(ann_cfg):
+    """
+    Validates ann configuration file.
+    """
     needed = ["data_train", "data_test", "epochs", "hidden_layer_1", "hidden_layer_2", "output_layer",
               "loss_function", "checkpoint_epochs", "checkpoint_path", "model_save_path", "metric",
               "sensor", "input_shape", "input_target", "input_others","inputs", "data_path", "cdf_data_path",
@@ -28,6 +31,9 @@ def validate_ann_cfg(ann_cfg):
 
 
 def validate_data_cfg(data_cfg):
+    """
+    Validates data configuration file.
+    """
     needed = ["raw_path", "save_path", "metrics", "n_sensors",
               "run_periods_self", "run_periods_others", "tide_period", "skip_period"]
 
@@ -41,7 +47,12 @@ def validate_data_cfg(data_cfg):
     return True
 
 def build(data_cfg):
+    """
+    Starts building cdf file.
 
+    Args:
+        data_cfg ([dict]): data configuration file
+    """
     save_path = data_cfg["save_path"]
     raw_path = data_cfg["raw_path"]
 
@@ -78,6 +89,17 @@ def build(data_cfg):
 
 
 def build_multiple(raw_folder, save_folder, run_periods_self, run_periods_others, tide_period, skip_period):
+    """
+    Builds cdf file according to the data configuration file.
+
+    Args:
+        raw_folder ([str]): path of raw folder
+        save_folder ([str]): path to save
+        run_periods_self ([int]): number of values sent from the target sensor
+        run_periods_others ([int]): number of values sent from neighbor sensors
+        tide_period ([int]): coefficient used to calculate a tide period
+        skip_period ([int]): minimum tax of sampling
+    """
     files_names = [f for f in listdir(raw_folder) if isfile(join(raw_folder, f))]
     sensors = [f.split("_")[0] for f in files_names]
 
@@ -132,6 +154,18 @@ def build_multiple(raw_folder, save_folder, run_periods_self, run_periods_others
 
 
 def build_new_times(times, sizes, skip_period, tide_period):
+    """
+    Aligns times in order for them to coincide with other sensor's times.
+
+    Args:
+        times ([list]): list of raw times
+        sizes ([list]): list with len of values' size
+        skip_period ([int]): minimum tax of sampling
+        tide_period ([int]): coefficient used to calculate a tide period
+
+    Returns:
+        [list]: list of aligned times
+    """
     # finds the first real init_time
     # [row[0] for row in times] -> column 0 (4 primeiros idx)
     times_first = [row[0] for row in times]
@@ -212,7 +246,7 @@ def build_new_times(times, sizes, skip_period, tide_period):
                 if idx_tmp > -1:
                     # calculates the diff in seconds between neighbour timestamp and target
                     # difference = float(times[0][i] - times[j][idx_tmp - 1]) * (60 * 1440)
-                    difference = float(times[0][i] - times[j][idx_tmp - 1]) * 60
+                    difference = float(times[0][i] - times[j][idx_tmp - 1]) * 60 / 1000
                     new_times[t][j].append(times[j][idx_tmp - 1])
                     new_times[t][j].append(difference)
                     new_times[t][j].append(idx_tmp - 1)
@@ -226,10 +260,26 @@ def build_new_times(times, sizes, skip_period, tide_period):
 
     return new_times
 
+def generate1(target_time, times, values, sensor_handler, new_times):
+    """
+    Generates entry vectors.
 
-def generate1(target_time, sizes, times, values, sensor_handler, new_times):
+    Args:
+        target_time ([int]): current target time
+        times ([list]): list of raw times
+        values ([list]): list of raw values
+        sensor_handler ([SensorHandler]): SensorHandler class
+        new_times ([list]): list of new aligned times
+
+    Returns:
+        [list]: entry vector of measurement values
+        [list]: entry vector of time values
+    """
     idx_target = None
+    print("new times: ", new_times)
+    print("times: ", times)
     
+    print(target_time)
     for i in range(len(new_times)):
         times_g = new_times[i][0][0]
         if times_g == target_time:
@@ -358,6 +408,10 @@ def build_inputs(sizes=None, times=None, values=None, run_periods_self=None, run
                     counter = counter + 1
     return inputs, input_times, targets, targets_times
 
+"""
+Next functions are for file processing, mainly input files.
+"""
+
 def save_data(array, path):
     np.savez_compressed(path, array)
 
@@ -384,6 +438,35 @@ def load_raw(path):
     elif ".npz" in path:
         data = ((np.load(path, allow_pickle=True))['arr_0']).tolist()
         return data[0], data[1]
+    elif ".json" in path:
+        with open(path) as json_file:
+            data = json.load(json_file)
+
+        new_data = data[0]
+
+        #removes first part of the json file, sensor's name part
+        sensor_data = new_data
+        sensor_data = new_data["data"]
+
+        #removes redundant depth parameter
+        for i in range(len(sensor_data)):
+            del sensor_data[i]['depth']
+
+        timestamps = []
+        values = []
+        count = 0
+        for d in sensor_data:
+            if count != 0:
+                d["x"] = d["x"]/1000
+                date = datetime.datetime.utcfromtimestamp(d["x"]).strftime('%Y-%m-%d %H:%M') 
+                date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M")
+                date = datetime.datetime.timestamp(date)
+                timestamps.append(date)
+                values.append(d["y"])
+            count += 1
+
+        return timestamps, values
+
     else:
         return None, None
 

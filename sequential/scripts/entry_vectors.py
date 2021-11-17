@@ -9,7 +9,20 @@ def checkIfDuplicates(listOfElems):
         return True
 
 def build1_input(new_times, times, values, idx_target, sensor_handler):
+    """
+    Builds one entry vector
 
+    Args:
+        new_times ([list]): list of aligned times
+        times ([list]): list of raw times
+        values ([list]): list of raw measurement values
+        idx_target ([int]): current index target
+        sensor_handler ([SensorHandler]): SensorHandler class
+
+    Returns:
+        [list]: entry vector of measurement values
+        [list]: entry vector of time values
+    """
     run_periods_self = sensor_handler.get_run_periods_self()
     run_periods_others = sensor_handler.get_run_periods_others()
     tide_period = sensor_handler.get_tide_period()
