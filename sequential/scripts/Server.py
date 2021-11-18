@@ -1,4 +1,4 @@
-import datetime, sock_utils, pickle, struct, globals
+import datetime, sock_utils, pickle, struct
 
 class Server:
     """
@@ -18,7 +18,6 @@ class Server:
         self._port = port
         self._conn = None
         self._msg_bytes = 0
-        self._dataQueue = globals.dataQueue
 
     def connect_message(self):
         """

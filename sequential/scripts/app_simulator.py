@@ -1,18 +1,13 @@
 import json
 import time
 from datetime import datetime
-import socket as s
 
-import Pyro4
 import sys
 from os import listdir
 from os.path import isfile, join, isdir
 from Server import Server
 
-import functions, globals
-
-# NAME = "Simulator"
-# server = Pyro4.Proxy(f'PYRONAME:aquamon.server')
+import functions
 
 HOST = '127.0.0.1'
 PORT = 9999
@@ -166,7 +161,7 @@ def send(data, sleep_t):
     now = datetime.now()
     msg = f'[{now:%Y-%m-%d %H:%M:%S}] Sending data...'
     print(msg)
-    # server.connect_message(NAME)
+
     serv_sock = Server(HOST,PORT)
     client_sock = serv_sock.connect_message()
 
@@ -188,7 +183,6 @@ def send(data, sleep_t):
         elif sleep_t > 0:
             time.sleep(sleep_t)
 
-    # server.disconnect_message(NAME)
     client_sock.close()
 
 

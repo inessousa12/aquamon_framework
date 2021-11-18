@@ -276,10 +276,6 @@ def generate1(target_time, times, values, sensor_handler, new_times):
         [list]: entry vector of time values
     """
     idx_target = None
-    print("new times: ", new_times)
-    print("times: ", times)
-    
-    print(target_time)
     for i in range(len(new_times)):
         times_g = new_times[i][0][0]
         if times_g == target_time:

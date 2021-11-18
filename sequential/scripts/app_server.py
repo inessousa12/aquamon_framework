@@ -1,18 +1,15 @@
 import json
 import os
-import queue
-import time
 import socket as s
 import struct
 import pickle
 import sock_utils
-import statistics
 import align_times
 import sys
 from datetime import datetime
-from multiprocessing import Queue
-import Pyro4
-import globals, prediction_quality
+from multiprocessing import Condition, Queue
+import threading
+import prediction_quality
 
 from SensorHandler import SensorHandler
 
@@ -21,50 +18,57 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 HOST = ''
 PORT = 9999
+dataQueue = Queue()
 
 # EXPLICAÇÃO SEMAPHORE VS CONDITION: https://stackoverflow.com/questions/3513045/conditional-variable-vs-semaphore
 
-
-def main_thread(data_queue, sensor_handler, conn_sock, sock):
+def communicate(cond):
     """
-    Main thread with a sequential approach of data processing.
-    For each value received:
-    stores data -> aligns times -> tries making predictions -> checks its quality -> output
+    Thread that communicates with the socket and receives data.
 
     Args:
-        data_queue ([Queue]): queue with data
-        sensor_handler ([SensorHandler]): SensorHandler class object
-        conn_sock ([sock]): connection socket
-        sock ([sock]): server's socket
+        cond ([Condition]): lock condition
     """
-    #variables
     while_flag = True
 
     while while_flag:        
         #store data
         #Received data from client
-        try:
-            size_bytes = sock_utils.receive_all(conn_sock, 4)
-            size = struct.unpack('!i', size_bytes)[0]
+        size_bytes = sock_utils.receive_all(conn_sock, 4)
+        size = struct.unpack('!i', size_bytes)[0]
 
-            msg_bytes = sock_utils.receive_all(conn_sock, size)
-            recvCmd = pickle.loads(msg_bytes)
-        except:
-            print(sensor_handler)
-            break
-        
+        msg_bytes = sock_utils.receive_all(conn_sock, size)
+        recvCmd = pickle.loads(msg_bytes)
 
-        # try:
-            # msg = data_queue.get(timeout=10)
+        cond.acquire()
+
         data = json.loads(recvCmd)
+        dataQueue.put(data)
+        
+        cond.notify()
+        cond.release()
+
+def processing(cond, sensor_handler):
+    """
+    Threads that processes received data. Sequential approach of data processing.
+    For each value received:
+    aligns times -> tries making predictions -> checks its quality -> output
+
+    Args:
+        cond ([Condition]): lock condition
+        sensor_handler ([SensorHandler]): SensorHandler object
+    """
+    while True:
+        cond.acquire()
+        while dataQueue.qsize() == 0:
+            cond.wait(timeout=10)
+        
+        data = dataQueue.get()
         sensor_handler.append(data)
-        # except queue.Empty:
-        #     while_flag = False
-        #     print(sensor_handler)
 
-        # time.sleep(1)
+        cond.release()
 
-        #check if there are enough values for a prediction and aligns times
+        #checks if there are enough values for a prediction and aligns times
         flag, new_times, sensor_values, sensor_times, inserted_values_indexes, sensor = align_times.check_new_times(sensor_handler)
 
         #prediction and quality block
@@ -85,8 +89,7 @@ def main_thread(data_queue, sensor_handler, conn_sock, sock):
 
         if len(msg) > 0:
             print(msg)
-            print(f'Entry Queue Size: {data_queue.qsize()}, Prediction Queue: {sensor_handler.prediction_queue.qsize()}')
-    sock.close()
+            print(f'Entry Queue Size: {dataQueue.qsize()}, Prediction Queue: {sensor_handler.prediction_queue.qsize()}')
 
 if __name__ == "__main__":
     """
@@ -101,4 +104,10 @@ if __name__ == "__main__":
         approach = sys.argv[1]
 
         sensor_handler = SensorHandler(750, 10, 0, approach, cdf_threshold=0.9985, ignore_miss=True)
-        main_thread(globals.dataQueue, sensor_handler, conn_sock, server)
+
+        condition = threading.Condition()
+        commThread = threading.Thread(name="communicationThread", target=communicate, args=(condition))
+        processingThread = threading.Thread(name="processingThread", target=processing, args=(condition, sensor_handler))
+
+        commThread.start()
+        processingThread.start()
