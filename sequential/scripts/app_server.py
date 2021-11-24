@@ -16,8 +16,6 @@ from SensorHandler import SensorHandler
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-HOST = ''
-PORT = 9999
 dataQueue = Queue()
 
 # EXPLICAÇÃO SEMAPHORE VS CONDITION: https://stackoverflow.com/questions/3513045/conditional-variable-vs-semaphore
@@ -61,7 +59,11 @@ def processing(cond, sensor_handler):
     while True:
         cond.acquire()
         while dataQueue.qsize() == 0:
-            cond.wait(timeout=10)
+            val = cond.wait(timeout=10)
+
+            if not val:
+                print(sensor_handler)
+                break
         
         data = dataQueue.get()
         sensor_handler.append(data)
@@ -93,20 +95,35 @@ def processing(cond, sensor_handler):
 
 if __name__ == "__main__":
     """
-    Starts server
+    Starts server. Receives configuration file, a json file, with the necessary information to process data.
+    This information is given to the SensorHandler class and it is also used to create a socket communication. 
     """
     if len(sys.argv) == 2:
+        json_path = sys.argv[1]
+        with open(json_path) as json_file:
+            data = json.load(json_file)
+
+        sensor_handler_data = data["sensor_handler"]
+        communication_data = data["communication"]
+
+        HOST = communication_data["host"]
+        PORT = int(communication_data["port"])
+
         server = sock_utils.create_tcp_server_socket(HOST, PORT, 1024)
 
         (conn_sock, addr) = server.accept()
 
         print("Connected to ", (addr, PORT), "\n")
-        approach = sys.argv[1]
-
-        sensor_handler = SensorHandler(750, 10, 0, approach, cdf_threshold=0.9985, ignore_miss=True)
+        
+        sensor_handler = SensorHandler(int(sensor_handler_data["tide_period"]), 
+                                       int(sensor_handler_data["run_periods_self"]), 
+                                       int(sensor_handler_data["run_periods_others"]), 
+                                       int(sensor_handler_data["approach"]), 
+                                       float(sensor_handler_data["cdf_threshold"]), 
+                                       bool(sensor_handler_data["ignore_miss"]))
 
         condition = threading.Condition()
-        commThread = threading.Thread(name="communicationThread", target=communicate, args=(condition))
+        commThread = threading.Thread(name="communicationThread", target=communicate, args=(condition,))
         processingThread = threading.Thread(name="processingThread", target=processing, args=(condition, sensor_handler))
 
         commThread.start()

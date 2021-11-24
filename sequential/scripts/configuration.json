@@ -1,0 +1,14 @@
+{
+    "sensor_handler": {
+        "tide_period": 750,
+        "run_periods_self": 10,
+        "run_periods_others": 0,
+        "approach": 1,
+        "cdf_threshold": 0.9985,
+        "ignore_miss": "True"
+    },
+    "communication": {
+        "host": "",
+        "port": 9999
+    }
+}

@@ -20,7 +20,6 @@ def prediction_quality_process(new_times, sensor_values, sensor_times, inserted_
         sensor_handler ([SensorHandler]): SensorHandler object
     """
     #prediction block
-    print(inserted_values_indexes)
     if len(inserted_values_indexes) >= 1:
         for index in inserted_values_indexes:
             values = sensor_handler.prediction_block.try_prediction(index, sensor, sensor_handler, sensor_values, sensor_times, new_times)
@@ -50,7 +49,7 @@ def prediction_quality_process(new_times, sensor_values, sensor_times, inserted_
             quality = sensor_handler.quality_block.quality_calculation(probabilities)
         else:
             quality = 0
-            now = datetime.now()
+            now = datetime.datetime.now()
 
             _, true_t = sensor_handler.sensors_data[sensor].get_raw_values()
             temp = sensor_handler.sensors_data[sensor].get(index)['time']

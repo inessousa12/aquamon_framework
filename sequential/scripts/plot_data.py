@@ -4,8 +4,8 @@ from matplotlib import pyplot as plt
 import functions
 
 # times, values = load_raw("data\\raw_main\\21jul_2009-18oct_2009\\temp\\dsdma_temp_21jul_18oct2009.mat")
-times, values = functions.load_raw("data\lnec\lnec_out_file.mat")
-times_p, values_p = functions.load_raw("data\lnec\lnec_out_file_predictions.mat")
+times, values = functions.load_raw("data\lnec\lnec_out_file.csv")
+times_p, values_p = functions.load_raw("data\lnec\lnec_out_file_predictions.csv")
 # times, values = load_raw("data\processed\\21jul_2009-18oct_2009\\temp\dsdma.npz")
 
 

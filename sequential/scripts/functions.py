@@ -5,6 +5,7 @@ from os.path import isfile, join, isdir
 
 import json
 from scipy.io import loadmat
+import csv
 
 import numpy as np
 import datetime
@@ -246,7 +247,7 @@ def build_new_times(times, sizes, skip_period, tide_period):
                 if idx_tmp > -1:
                     # calculates the diff in seconds between neighbour timestamp and target
                     # difference = float(times[0][i] - times[j][idx_tmp - 1]) * (60 * 1440)
-                    difference = float(times[0][i] - times[j][idx_tmp - 1]) * 60 / 1000
+                    difference = float(times[0][i] - times[j][idx_tmp - 1]) * 60
                     new_times[t][j].append(times[j][idx_tmp - 1])
                     new_times[t][j].append(difference)
                     new_times[t][j].append(idx_tmp - 1)
@@ -431,6 +432,15 @@ def load_raw(path):
         # print(len(data['data']))
         # times, values
         # return data['data']['values'].item()[:, 0], data['data']['values'].item()[:, 1]
+    elif ".csv" in path:
+        times = []
+        values = []
+        with open(path, 'r') as file:
+            csvreader = csv.reader(file)
+            for row in csvreader:
+                times.append(float(row[0]))
+                values.append(float(row[1]))
+        return times, values
     elif ".npz" in path:
         data = ((np.load(path, allow_pickle=True))['arr_0']).tolist()
         return data[0], data[1]
