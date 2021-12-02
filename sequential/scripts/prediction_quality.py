@@ -41,10 +41,14 @@ def prediction_quality_process(new_times, sensor_values, sensor_times, inserted_
     elif not actual['prediction']:
         m = actual['value']
         p = [i[2] for i in predictions]
-        errors = sensor_handler.quality_block.calculate_error(m, p)
-        faulty, probabilities = sensor_handler.quality_block.fault_detection(predictions, errors)
 
-        to_replace = False
+        if m == 0 or (abs(m-p) > 5):
+            faulty = True
+        else:
+            errors = sensor_handler.quality_block.calculate_error(m, p)
+            faulty, probabilities = sensor_handler.quality_block.fault_detection(predictions, errors)
+
+            to_replace = False
         if not faulty:
             quality = sensor_handler.quality_block.quality_calculation(probabilities)
         else:

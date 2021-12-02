@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 from multiprocessing import Condition, Queue
 import threading
-import prediction_quality
+import prediction_quality, time
 
 from SensorHandler import SensorHandler
 
@@ -17,8 +17,43 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 dataQueue = Queue()
+sensorQueue = Queue()
 
 # EXPLICAÇÃO SEMAPHORE VS CONDITION: https://stackoverflow.com/questions/3513045/conditional-variable-vs-semaphore
+
+def omissionFD(cond, sensor_handler_data, index):
+    """
+    Thread that resolves ommision failures. Adds value 0 each time an interval (period_time + jitter) passes.
+    Later in the processing thread, the value 0 will be replaced for a prediction.
+
+    Args:
+        cond ([Condition]): lock condition
+        sensor_handler_data ([json]) : json from configuration file
+    """
+    period_time = sensor_handler_data["period_time"]
+    jitter = 1 #seconds
+    last_time = 0
+
+    while True:
+        cond.acquire()
+        flag = True
+        while sensorQueue.qsize() == 0:
+            val = cond.wait(timeout=period_time+jitter)
+            #checks if there are missing values
+            if not val:
+                print("aqui")
+                #fill with value 0 for later evaluation
+                data = {'time': last_time + period_time + jitter, 'value': 0, 'type': 'temp', 'sensor': 'lnec'}
+                dataQueue.put(data)
+                flag = False
+            break
+        
+        if flag:
+            data = sensorQueue.get()
+            last_time = data[index]['time'] #only works for one sensor
+            dataQueue.put(data[index])
+        cond.notify()
+        cond.release()
 
 def communicate(cond):
     """
@@ -26,25 +61,29 @@ def communicate(cond):
 
     Args:
         cond ([Condition]): lock condition
+        sensor_handler_data ([json]) : json from configuration file
     """
-    while_flag = True
+    while True:
+        try:
+            #store data
+            #Received data from client
+            size_bytes = sock_utils.receive_all(conn_sock, 4)
+            size = struct.unpack('!i', size_bytes)[0]
 
-    while while_flag:        
-        #store data
-        #Received data from client
-        size_bytes = sock_utils.receive_all(conn_sock, 4)
-        size = struct.unpack('!i', size_bytes)[0]
+            msg_bytes = sock_utils.receive_all(conn_sock, size)
+            recvCmd = pickle.loads(msg_bytes)
 
-        msg_bytes = sock_utils.receive_all(conn_sock, size)
-        recvCmd = pickle.loads(msg_bytes)
+            cond.acquire()
 
-        cond.acquire()
+            data = json.loads(recvCmd)
+            sensorQueue.put(data)
 
-        data = json.loads(recvCmd)
-        dataQueue.put(data)
-        
-        cond.notify()
-        cond.release()
+            cond.notify()
+            cond.release()
+        except:
+            time.sleep(10)
+            print(sensor_handler)
+            break
 
 def processing(cond, sensor_handler):
     """
@@ -105,6 +144,7 @@ if __name__ == "__main__":
 
         sensor_handler_data = data["sensor_handler"]
         communication_data = data["communication"]
+        sensors = data["sensors"]
 
         HOST = communication_data["host"]
         PORT = int(communication_data["port"])
@@ -124,7 +164,11 @@ if __name__ == "__main__":
 
         condition = threading.Condition()
         commThread = threading.Thread(name="communicationThread", target=communicate, args=(condition,))
-        processingThread = threading.Thread(name="processingThread", target=processing, args=(condition, sensor_handler))
+        processingThread = threading.Thread(name="processingThread", target=processing, args=(condition, sensor_handler,))
+
+        for i in range(len(sensors)):
+            omissionThread = threading.Thread(name="omissionThread", target=omissionFD, args=(condition, sensor_handler_data, i))
+            omissionThread.start()
 
         commThread.start()
         processingThread.start()
