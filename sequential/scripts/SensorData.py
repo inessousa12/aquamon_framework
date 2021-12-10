@@ -244,3 +244,26 @@ class SensorData:
 
             for elem in zipped:
                 writer.writerow(elem)
+
+            
+        with open('./data/lnec/lnec_raw_file.csv', 'w', encoding='UTF8', newline='') as f:
+            # create the csv writer
+            writer = csv.writer(f)
+
+            values, time = self.get_raw_values()
+
+            zipped = list(zip(time, values))
+
+            for elem in zipped:
+                writer.writerow(elem)
+
+        with open('./data/lnec/lnec_outliers_file.csv', 'w', encoding='UTF8', newline='') as f:
+            # create the csv writer
+            writer = csv.writer(f)
+
+            values, time = [i["value"] for i in self.__data if i["prediction"] == True], [i["time"] for i in self.__data if i["prediction"] == True]
+
+            zipped = list(zip(time, values))
+
+            for elem in zipped:
+                writer.writerow(elem)

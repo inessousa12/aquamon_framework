@@ -37,17 +37,28 @@ def omissionFD(cond, sensor_handler_data, index):
     while True:
         cond.acquire()
         flag = True
+        # print(sensorQueue.qsize())
         while sensorQueue.qsize() == 0:
+            # print("wait sensorqueue")
+            # cond.wait(timeout=1+jitter)
             val = cond.wait(timeout=period_time+jitter)
             #checks if there are missing values
             if not val:
-                print("aqui")
+                # print("aqui")
                 #fill with value 0 for later evaluation
                 data = {'time': last_time + period_time + jitter, 'value': 0, 'type': 'temp', 'sensor': 'lnec'}
                 dataQueue.put(data)
                 flag = False
             break
-        
+        # data = sensorQueue.get()
+        # current_time = data[index]['time']
+        # if current_time == last_time + 900 + jitter or current_time == last_time + 900 or current_time == last_time + 900 - jitter: #last_time + 15min
+        #     dataQueue.put(data[index])
+        # else:
+        #     #fill with value 0 for later evaluation
+        #     data = {'time': last_time + 900 + jitter, 'value': 0, 'type': 'temp', 'sensor': 'lnec'}
+        #     dataQueue.put(data)
+        # last_time = current_time #only works for one sensor
         if flag:
             data = sensorQueue.get()
             last_time = data[index]['time'] #only works for one sensor
@@ -76,6 +87,7 @@ def communicate(cond):
             cond.acquire()
 
             data = json.loads(recvCmd)
+            # print(data)
             sensorQueue.put(data)
 
             cond.notify()
@@ -98,6 +110,7 @@ def processing(cond, sensor_handler):
     while True:
         cond.acquire()
         while dataQueue.qsize() == 0:
+            print("wait dataqueue")
             val = cond.wait(timeout=10)
 
             if not val:

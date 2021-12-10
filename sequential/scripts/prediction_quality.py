@@ -42,7 +42,7 @@ def prediction_quality_process(new_times, sensor_values, sensor_times, inserted_
         m = actual['value']
         p = [i[2] for i in predictions]
 
-        if m == 0 or (abs(m-p) > 5):
+        if m == 0 or (abs(m-p[0]) > 5): #only for one sensor
             faulty = True
         else:
             errors = sensor_handler.quality_block.calculate_error(m, p)
