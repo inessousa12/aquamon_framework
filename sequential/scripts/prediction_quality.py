@@ -23,7 +23,7 @@ def prediction_quality_process(new_times, sensor_values, sensor_times, inserted_
     if len(inserted_values_indexes) >= 1:
         for index in inserted_values_indexes:
             values = sensor_handler.prediction_block.try_prediction(index, sensor, sensor_handler, sensor_values, sensor_times, new_times)
-            
+
             if len(values) > 0:
                 if index not in sensor_handler.predictions_data[sensor]:
                     sensor_handler.predictions_data[sensor][index] = []

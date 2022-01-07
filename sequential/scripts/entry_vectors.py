@@ -33,8 +33,6 @@ def build1_input(new_times, times, values, idx_target, sensor_handler):
     
     inputs = []
     input_times = []
-    # print("ID TARGET: ", idx_target)
-    # print("NEW TIMES: ", new_times)
     if new_times[idx_target][0][2] != 0:
         time_minus_tide_period = times[0][new_times[idx_target][0][2] - 1]
         time_minus_tide_period = time_minus_tide_period - (tide_period * 60)
@@ -56,21 +54,19 @@ def build1_input(new_times, times, values, idx_target, sensor_handler):
             final_idx = 0
 
         diff_between_idxs = abs(final_idx - first_idx)
-        # print("first index: ", first_idx)
-        # print("final index: ", final_idx)
 
         if int(approach) == 1:
             #exponential
             times_array = np.ceil(
-                np.exp(np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_self))) - 1
+                np.exp(np.linspace(1, np.log(diff_between_idxs), run_periods_self))) - 1
         elif int(approach) == 2:
             #linear
             times_array = np.ceil(
-                np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_self))
+                np.linspace(1, np.log(diff_between_idxs), run_periods_self))
         elif int(approach) == 3:
             #last ten
             times_array = np.ceil(
-                np.linspace(np.log(1), 9, run_periods_self))
+                np.linspace(1, 9, run_periods_self))
 
         last_val = 0
         increment = 0
@@ -90,22 +86,19 @@ def build1_input(new_times, times, values, idx_target, sensor_handler):
                 if input_idx == last_val and count < 10:
                     increment = increment + 1
                     input_idx = input_idx - 1
-            
-            
-            # print("LEN TIMES: ", len(times[0]))
-            # print("INPUT_IDX: ", input_idx)
-            # print("TIMES_ARRAY[K]: ", times_array[k])
-            # print("INCREMENT: ", increment)
-            # print("len input_times: ", len(input_times[0]))
 
             if input_idx < 0:
                 input_idx = 0
             
             count += 1
-            last_val = input_idx
-            indexes.append(input_idx)
-            input_times[0].append(times[0][input_idx])
-            inputs.append(values[0][input_idx])
+            last_val = input_idx-1
+            indexes.append(input_idx-1)
+            input_times[0].append(times[0][input_idx-1])
+            inputs.append(values[0][input_idx-1])
+            # last_val = input_idx
+            # indexes.append(input_idx)
+            # input_times[0].append(times[0][input_idx])
+            # inputs.append(values[0][input_idx])
         # print("INDEXES: ", indexes)
         # time.sleep(3)
     

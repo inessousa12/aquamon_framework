@@ -1,5 +1,5 @@
 import functions
-import queue
+import queue, time
 import numpy as np
 
 def check_new_times(sensor_handler):

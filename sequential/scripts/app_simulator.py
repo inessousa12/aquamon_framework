@@ -119,6 +119,7 @@ def send(data, sleep_t):
     current = None
     while not is_empty(data):
         item = popMultiple(data)
+        # print("item: ", item)
         msg = json.dumps(item)
 
         serv_sock.send_message(msg)

@@ -40,6 +40,7 @@ def omissionFD(cond, sensor_handler_data, index):
         # print(sensorQueue.qsize())
         while sensorQueue.qsize() == 0:
             # print("wait sensorqueue")
+            # print(sensorQueue.qsize())
             # cond.wait(timeout=1+jitter)
             val = cond.wait(timeout=period_time+jitter)
             #checks if there are missing values
@@ -61,6 +62,7 @@ def omissionFD(cond, sensor_handler_data, index):
         # last_time = current_time #only works for one sensor
         if flag:
             data = sensorQueue.get()
+            # print(data)
             last_time = data[index]['time'] #only works for one sensor
             dataQueue.put(data[index])
         cond.notify()
@@ -87,7 +89,6 @@ def communicate(cond):
             cond.acquire()
 
             data = json.loads(recvCmd)
-            # print(data)
             sensorQueue.put(data)
 
             cond.notify()
