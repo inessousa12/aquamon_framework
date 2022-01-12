@@ -36,6 +36,7 @@ class QualityBlock:
             cdf ([dict]): cdf
         """
         x_index = np.searchsorted(cdf['x'], x, side="left")
+        # print("cdf: ", cdf)
 
         if x_index == len(cdf['y']):
             v = 1
@@ -55,7 +56,7 @@ class QualityBlock:
         """
         errors = []
         for p in predictions:
-            errors.append(pow(p - actual, 2))
+            errors.append(pow(actual - p, 2))
         return errors
 
     def fault_detection(self, predictions, errors):

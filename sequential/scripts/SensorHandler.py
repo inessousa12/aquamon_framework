@@ -100,6 +100,7 @@ class SensorHandler:
             self.quality_data[sensor] = {}
 
         appended_indexes = self.sensors_data[data["sensor"]].append(data)
+        
 
         if len(appended_indexes) > 0:
             self.prediction_queue.put((appended_indexes, sensor))

@@ -111,7 +111,7 @@ class SensorData:
                 last_measurement_time = last_measurement["time"]
                 # current_time_difference = round((current_measurement_time - last_measurement_time) * (60 * 1440), 2)
                 current_time_difference = round((current_measurement_time - last_measurement_time) * 60, 2)
-
+                # print("timediff: ", current_time_difference)
                 # GET TIME STEP FROM FIRST TWO MEASUREMENTS
                 if self.frequency == -1:
                     self.frequency = round(current_time_difference, -1)
@@ -120,7 +120,6 @@ class SensorData:
                 else:
                     max_accepted = float(self.frequency) + 1.5
                     min_accepted = float(self.frequency) - 1.5
-
                     if current_time_difference > max_accepted or current_time_difference < min_accepted:
                         to_append = False
 
@@ -139,13 +138,12 @@ class SensorData:
                             temp_time = last_measurement_time + multiplier
                             # t = (temp_time - current_measurement_time) * (60 * 1440)
                             t = (temp_time - current_measurement_time) * 60
-
                             if 1.5 >= t >= -1.5:
                                 nones_to_insert = temp_multiplier - 1
                                 for i in range(nones_to_insert):
                                     # temp_time = last_measurement_time + (((i + 1) * self.frequency) / (60 * 1440))
                                     temp_time = last_measurement_time + (((i + 1) * self.frequency) / 60)
-                                    self.__data.append({"value": None, "time": temp_time, "prediction": False})
+                                    self.__data.append({"value": 0, "time": temp_time, "prediction": False})
                                     appended_indexes.append(len(self.__data) - 1)
                                 to_append = True
 

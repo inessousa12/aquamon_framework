@@ -45,7 +45,7 @@ def omissionFD(cond, sensor_handler_data, index):
             val = cond.wait(timeout=period_time+jitter)
             #checks if there are missing values
             if not val:
-                # print("aqui")
+                print("aqui")
                 #fill with value 0 for later evaluation
                 data = {'time': last_time + period_time + jitter, 'value': 0, 'type': 'temp', 'sensor': 'lnec'}
                 dataQueue.put(data)
@@ -68,7 +68,7 @@ def omissionFD(cond, sensor_handler_data, index):
         cond.notify()
         cond.release()
 
-def communicate(cond):
+def communicate(cond, sensor_handler_data):
     """
     Thread that communicates with the socket and receives data.
 
@@ -76,6 +76,10 @@ def communicate(cond):
         cond ([Condition]): lock condition
         sensor_handler_data ([json]) : json from configuration file
     """
+    period_time = sensor_handler_data["period_time"]
+    jitter = 1 #seconds
+    last_time = 0
+
     while True:
         try:
             #store data
@@ -89,7 +93,25 @@ def communicate(cond):
             cond.acquire()
 
             data = json.loads(recvCmd)
-            sensorQueue.put(data)
+            # if last_time == 0:
+            #     dataQueue.put(data[0])
+            #     last_time = data[0]["time"]
+            # elif data[0]["time"] > last_time + period_time + jitter:
+            #     dtime = last_time + period_time + jitter
+            #     while dtime < data[0]["time"]:
+            #         omission = {'time': dtime, 'value': 0, 'type': 'temp', 'sensor': 'lnec'}
+            #         last_time = dtime
+            #         dtime = last_time + period_time + jitter
+            #         dataQueue.put(omission)
+            #     dataQueue.put(data[0])
+            #     last_time = data[0]["time"]
+            # else:
+            #     dataQueue.put(data[0])
+            #     last_time = data[0]["time"]
+
+            # print(data)
+            # sensorQueue.put(data)
+            dataQueue.put(data[0])
 
             cond.notify()
             cond.release()
@@ -110,8 +132,7 @@ def processing(cond, sensor_handler):
     """
     while True:
         cond.acquire()
-        while dataQueue.qsize() == 0:
-            print("wait dataqueue")
+        while dataQueue.qsize() == 0: 
             val = cond.wait(timeout=10)
 
             if not val:
@@ -125,7 +146,7 @@ def processing(cond, sensor_handler):
 
         #checks if there are enough values for a prediction and aligns times
         flag, new_times, sensor_values, sensor_times, inserted_values_indexes, sensor = align_times.check_new_times(sensor_handler)
-
+        
         #prediction and quality block
         if flag:
             prediction_quality.prediction_quality_process(new_times, sensor_values, sensor_times, inserted_values_indexes, sensor, sensor_handler)
@@ -139,7 +160,7 @@ def processing(cond, sensor_handler):
                 now = datetime.now()
                 msg = f'[{now:%Y-%m-%d %H:%M:%S}]'
             sensor = sensor_handler.sensors_data[i]
-            msg += f'[{i} -> M: [{len(sensor.get_raw_values()[1])}]]   '
+            msg += f'[{i} -> M: [{len(sensor.get_values()[1])}]]   '
             count += 1
 
         if len(msg) > 0:
@@ -177,12 +198,12 @@ if __name__ == "__main__":
                                        bool(sensor_handler_data["ignore_miss"]))
 
         condition = threading.Condition()
-        commThread = threading.Thread(name="communicationThread", target=communicate, args=(condition,))
+        commThread = threading.Thread(name="communicationThread", target=communicate, args=(condition, sensor_handler_data,))
         processingThread = threading.Thread(name="processingThread", target=processing, args=(condition, sensor_handler,))
 
-        for i in range(len(sensors)):
-            omissionThread = threading.Thread(name="omissionThread", target=omissionFD, args=(condition, sensor_handler_data, i))
-            omissionThread.start()
+        # for i in range(len(sensors)):
+        #     omissionThread = threading.Thread(name="omissionThread", target=omissionFD, args=(condition, sensor_handler_data, i))
+        #     omissionThread.start()
 
         commThread.start()
         processingThread.start()

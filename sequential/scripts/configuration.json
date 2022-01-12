@@ -5,8 +5,8 @@
         "run_periods_others": 0,
         "approach": 1,
         "cdf_threshold": 0.9985,
-        "ignore_miss": "True",
-        "period_time": 1,
+        "ignore_miss": "False",
+        "period_time": 900,
         "unity": "seconds"
     },
     "communication": {
@@ -15,7 +15,7 @@
     },
     "sensors" : [{
         "sensor_id": "lnec",
-        "path": "data\\raw_other\\01ago_2021-08ago_2021_faulty\\temp\\lnec_data_ago01_ago08_faulty.json",
+        "path": "data\\raw_other\\01set_2021-08set_2021\\temp\\lnec_data_set01_set08.json",
         "data_type": "temp"
     }]
 }

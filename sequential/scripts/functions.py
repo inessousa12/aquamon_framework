@@ -187,7 +187,7 @@ def build_new_times(times, sizes, skip_period, tide_period):
     # encontra o timestep inicial para comecar a corrida
     init_time_idx = 0
     max_time_idx = [index for index, item in enumerate(times_target_sensor) if item != 0][-1]
-    for i in range(final_init_time_idx, max_time_idx):  #lnec example 10 values
+    for i in range(final_init_time_idx, max_time_idx): 
         val = times[0][i]
         counter_differences = 0
         for j in range(1, len(times)):
@@ -281,7 +281,10 @@ def generate1(target_time, times, values, sensor_handler, new_times):
         times_g = new_times[i][0][0]
         if times_g == target_time:
             idx_target = i
-
+    # print(idx_target)
+    # print(new_times)
+    # print("len new times: ", len(new_times))
+    # print("target_time: ", target_time)
     if idx_target is None:
         return None, None
 
@@ -297,7 +300,7 @@ def build_inputs(sizes=None, times=None, values=None, run_periods_self=None, run
         : index 0       -> Target data
         : next index's  -> Neighbour data
     """
-    new_times = build_new_times(sizes, times, skip_period, tide_period)
+    new_times = build_new_times(times, sizes, skip_period, tide_period)
 
     if run_periods_self > 0:
         start = run_periods_self

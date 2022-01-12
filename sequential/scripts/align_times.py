@@ -7,6 +7,7 @@ def check_new_times(sensor_handler):
         values = sensor_handler.get_prediction_queue()
     except queue.Empty:
         return False, None, None, None, None, None
+
     inserted_values_indexes = values[0]
     sensor = values[1]
 

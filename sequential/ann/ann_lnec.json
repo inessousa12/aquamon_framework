@@ -17,8 +17,8 @@
     "checkpoint_path": "ann/training/",
     "model_save_path": "ann/models/",
     "data_path": [
-        "data\\processed\\lnec\\temp\\lnec.npz"
+        "data\\processed\\lnec_two_months\\temp\\lnec.npz"
     ],
-    "cdf_data_path": "data\\processed\\lnec\\temp\\lnec.npz",
+    "cdf_data_path": "data\\processed\\lnec_two_months\\temp\\lnec.npz",
     "runs": 10
 }

@@ -59,7 +59,7 @@ class PredictionBlock:
         sizes = [len(i) for i in values]
 
         input_values, input_times = functions.generate1(target_time, times, values, sensor_handler, new_times)
-        
+
         run_periods_self = sensor_handler.get_run_periods_self()
 
         predictions = []
@@ -70,14 +70,11 @@ class PredictionBlock:
             inputs_others = inputs[run_periods_self:]
             models = []
             to_input = []
-            print(inputs)
 
             ann_type = []
             if None in inputs: #a missing value is detected
                 if None not in inputs_self: #only enters if there is no omission
-                    print("aqui")
                     self_model = self.get_model(sensor, sensors[sensor].type, 'self')
-                    print(self_model)
                     if self_model is not None:
                         models.append(self_model)
                         to_input.append(inputs_self)

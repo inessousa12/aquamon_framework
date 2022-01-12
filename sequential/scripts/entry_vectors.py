@@ -48,7 +48,7 @@ def build1_input(new_times, times, values, idx_target, sensor_handler):
         if first_idx < 0:
             first_idx = 0
 
-        final_idx = new_times[idx_target][0][2] - 1
+        final_idx = new_times[idx_target][0][2] - 1 #ignores current value received
 
         if final_idx < 0:
             final_idx = 0
@@ -58,15 +58,15 @@ def build1_input(new_times, times, values, idx_target, sensor_handler):
         if int(approach) == 1:
             #exponential
             times_array = np.ceil(
-                np.exp(np.linspace(1, np.log(diff_between_idxs), run_periods_self))) - 1
+                np.exp(np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_self))) - 1
         elif int(approach) == 2:
             #linear
             times_array = np.ceil(
-                np.linspace(1, np.log(diff_between_idxs), run_periods_self))
+                np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_self))
         elif int(approach) == 3:
             #last ten
             times_array = np.ceil(
-                np.linspace(1, 9, run_periods_self))
+                np.linspace(np.log(1), 9, run_periods_self))
 
         last_val = 0
         increment = 0
@@ -74,6 +74,9 @@ def build1_input(new_times, times, values, idx_target, sensor_handler):
         input_times.append([])
         indexes = []
         count = 0
+
+        # print("idx target: ", final_idx+1)
+        # print("times_array: ", times_array)
         
         for k in range(0, run_periods_self):
             if run_periods_self == 1:
@@ -89,16 +92,16 @@ def build1_input(new_times, times, values, idx_target, sensor_handler):
 
             if input_idx < 0:
                 input_idx = 0
+
+            
+            # print("input idx: ", input_idx)
+            # print("value: ", values[0][input_idx])
             
             count += 1
-            last_val = input_idx-1
-            indexes.append(input_idx-1)
-            input_times[0].append(times[0][input_idx-1])
-            inputs.append(values[0][input_idx-1])
-            # last_val = input_idx
-            # indexes.append(input_idx)
-            # input_times[0].append(times[0][input_idx])
-            # inputs.append(values[0][input_idx])
+            last_val = input_idx
+            indexes.append(input_idx)
+            input_times[0].append(times[0][input_idx])
+            inputs.append(values[0][input_idx])
         # print("INDEXES: ", indexes)
         # time.sleep(3)
     
@@ -125,15 +128,15 @@ def build1_input(new_times, times, values, idx_target, sensor_handler):
             if int(approach) == 1:
                 #exponential
                 times_array = np.ceil(
-                    np.exp(np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_self))) - 1
+                    np.exp(np.linspace(1, np.log(diff_between_idxs), run_periods_self))) - 1
             elif int(approach) == 2:
                 #linear
                 times_array = np.ceil(
-                    np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_self))
+                    np.linspace(1, np.log(diff_between_idxs), run_periods_self))
             elif int(approach) == 3:
                 #last ten
                 times_array = np.ceil(
-                    np.linspace(np.log(1), 9, run_periods_self))
+                    np.linspace(1, 9, run_periods_self))
 
             last_val = 0
             increment = 0
