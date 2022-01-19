@@ -28,7 +28,7 @@ class Server(object):
 
 
 def start_server():
-    sensor_handler = SensorHandler(750, 60, 0, cdf_threshold=0.9985, ignore_miss=True)
+    sensor_handler = SensorHandler(750, 60, 20, cdf_threshold=0.9985, ignore_miss=True)
 
     readerThread = threading.Thread(target=queue_reader_thread, args=(dataQueue, sensor_handler,))
     readerThread.start()

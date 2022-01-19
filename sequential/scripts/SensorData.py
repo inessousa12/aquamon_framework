@@ -92,6 +92,8 @@ class SensorData:
         """
         appended_indexes = []
         new_entry["prediction"] = False
+        new_entry["failure"] = False
+        new_entry["failure_type"] = ""
 
         if self.type == "":
             self.type = new_entry["type"]
@@ -143,7 +145,7 @@ class SensorData:
                                 for i in range(nones_to_insert):
                                     # temp_time = last_measurement_time + (((i + 1) * self.frequency) / (60 * 1440))
                                     temp_time = last_measurement_time + (((i + 1) * self.frequency) / 60)
-                                    self.__data.append({"value": 0, "time": temp_time, "prediction": False})
+                                    self.__data.append({"value": 0, "time": temp_time, "prediction": False, "failure": True, "failure_type": "omission"})
                                     appended_indexes.append(len(self.__data) - 1)
                                 to_append = True
 
@@ -189,6 +191,9 @@ class SensorData:
         """
         if index < len(self.__data):
             self.__data[index]["prediction"] = True
+            if self.__data[index]["failure"] != True:
+                self.__data[index]["failure"] = True
+                self.__data[index]["failure_type"] = "outlier"
             self.__data[index]["true_value"] = copy.deepcopy(self.__data[index]["value"])
             self.__data[index]["value"] = value
 

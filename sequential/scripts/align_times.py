@@ -16,6 +16,7 @@ def check_new_times(sensor_handler):
     for index in inserted_values_indexes:
         # Check if we have at least 750min of data (1 tide period)
         sensor_names = list(sensors_data.keys())
+        # min_time = sensors_data[sensor].get(0)["time"] + ((sensor_handler.tide_period+50) / float(1440))
         min_time = sensors_data[sensor].get(0)["time"] + ((sensor_handler.tide_period+50) * 60)
         target_time = sensors_data[sensor].get(index)["time"]
         diff = target_time - min_time
@@ -23,11 +24,11 @@ def check_new_times(sensor_handler):
             diffs = []
             
             for sn in sensor_names:
+                # current_min_time = sensors_data[sn].get(0)["time"] + ((sensor_handler.tide_period+50) / float(1440))
                 current_min_time = sensors_data[sn].get(0)["time"] + ((sensor_handler.tide_period+50) * 60)
                 current_diff = target_time - current_min_time
                 diffs.append(current_diff)
             diffs = [i for i in diffs if i > 0]
-
             if len(diffs) != len(sensor_names):
                 return False, None, None, None, None, None
         else:
@@ -43,11 +44,11 @@ def check_new_times(sensor_handler):
 
     for sensor_name in sensor_names:
         if not sensor_handler.ignore_miss:
-            temp_v, temp_t = sensors_data[sensor_name].get_values()
+            temp_v, temp_t = sensors_data[sensor_name].get_values() #these are the true raw values (values that the sensor sends)
             values.append(temp_v)
             times.append(temp_t)
         else:
-            temp_v, temp_t = sensors_data[sensor_name].get_raw_values()
+            temp_v, temp_t = sensors_data[sensor_name].get_raw_values() #these values include replaced values and missing data 
             values.append(temp_v)
             times.append(temp_t)
 
@@ -66,6 +67,7 @@ def check_new_times(sensor_handler):
     values = np.asarray(values)
 
     sizes = [len(i) for i in values]
+    # print("len times: ", len(times[0]))
 
     #align times
     new_times = functions.build_new_times(times, sizes, sensor_handler.get_skip_period(), sensor_handler.get_tide_period())

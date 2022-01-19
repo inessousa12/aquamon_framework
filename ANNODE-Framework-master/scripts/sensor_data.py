@@ -417,15 +417,22 @@ class PredictionBlock:
         
         # Check if we have atleast 750min of data (1tide period)
         sensor_names = list(sensors.keys())
-        min_time = sensors[sensor].get(0)["time"] + ((tide_period+50) / float(1440))
+        # min_time = sensors[sensor].get(0)["time"] + ((tide_period+50) / float(1440))
+        min_time = sensors[sensor].get(0)["time"] + ((tide_period+50) * 60)
         target_time = sensors[sensor].get(appended_index)["time"]
+        print("target_time: ", target_time)
+        # print("target: ", sensors[sensor].get(appended_index))
+        print("index: ", appended_index)
+        print("sensor: ", sensor)
+        # time.sleep(5)
         diff = target_time - min_time
         # print(diff)
         if diff > 0:
             diffs = []
             
             for sn in sensor_names:
-                current_min_time = sensors[sn].get(0)["time"] + ((tide_period+50) / float(1440))
+                # current_min_time = sensors[sn].get(0)["time"] + ((tide_period+50) / float(1440))
+                current_min_time = sensors[sn].get(0)["time"] + ((tide_period+50) * 60)
                 current_diff = target_time - current_min_time
                 diffs.append(current_diff)
             diffs = [i for i in diffs if i > 0]
@@ -457,7 +464,7 @@ class PredictionBlock:
         
         # Switch sensor[0] to the main sensor
         tmp = np.copy(values[0])
-        print(tmp)
+        # print(tmp)
         values[0] = values[main_sensor_index]
         values[main_sensor_index] = tmp
 

@@ -7,16 +7,17 @@ import functions
 times, values = functions.load_raw("data\lnec\lnec_out_file.csv")
 # times, values = functions.load_raw("data\\raw_other\\01ago_2021-08ago_2021_faulty\\temp\lnec_data_ago01_ago08_faulty.json")
 times_p, values_p = functions.load_raw("data\lnec\lnec_out_file_predictions.csv")
-times_r, values_r = functions.load_raw("data\\raw_other\\01set_2021-08set_2021\\temp\\lnec_data_set01_set08.json")
+# times_r, values_r = functions.load_raw("data\\raw_other\\01out_2013-31dec_2013\\temp\jettya_temp_1out_31dec_2013.csv")
 # times_o, values_o = functions.load_raw("data\lnec\lnec_outliers_file.csv")
 # times, values = load_raw("data\processed\\21jul_2009-18oct_2009\\temp\dsdma.npz")
 
 
 # times = [datetime.fromordinal(int(i)) + timedelta(days=i % 1) - timedelta(days=366) for i in times]
 # print(times)
-times = [datetime.fromtimestamp(i) for i in times]
-times_p = [datetime.fromtimestamp(i) for i in times_p]
-times_r = [datetime.fromtimestamp(i) for i in times_r]
+times = [datetime.fromtimestamp(float(i)) for i in times]
+times_p = [datetime.fromtimestamp(float(i)) for i in times_p]
+# times_r = [datetime.fromtimestamp(float(i)) for i in times_r]
+# times_r = [i for i in times_r]
 # times_o = [datetime.fromtimestamp(i) for i in times_o]
 # print(values)
 
@@ -28,8 +29,8 @@ values_x = times
 values_y = values
 values_x_p = times_p
 values_y_p = values_p
-values_x_r = times_r
-values_y_r = values_r
+# values_x_r = times_r
+# values_y_r = values_r
 # values_x_o = times_o
 # values_y_o = values_o
 
@@ -39,8 +40,8 @@ f = plt.figure(figsize=(12.0, 3.2))
 plt.ylabel('Temperature (ºC)', fontsize=16)
 plt.title(sensor_name, fontsize=20)
 plt.plot(values_x, values_y, color='royalblue', label='Corrected Values', linewidth=1.1)
-# plt.plot(values_x_p, values_y_p, color='red', label='Predictions', linewidth=1.1)
-# plt.plot(values_x_r, values_y_r, color='black', label='Raw Values', linewidth=1.1)
+plt.plot(values_x_p, values_y_p, color='red', label='Predictions', linewidth=1.1)
+# plt.plot(values_x_r, values_y_r, 'r.', color='black', label='Raw Values', linewidth=1.1)
 # plt.plot(values_x_o, values_y_o, 'r.', color='black', label='Outliers', linewidth=1.1)
 #plt.xticks(xticks, fontsize=14)
 plt.yticks(yticks, fontsize=14)

@@ -41,7 +41,7 @@ def validate(path):
             if not len(file_name) > 4:
                 return data
             str_end = file_name[-4:]
-            if not str_end == ".mat" and not str_end == ".npz":
+            if not str_end == ".mat" and not str_end == ".npz" and not str_end == ".csv":
                 return data
 
         data = build_data(path)
@@ -65,7 +65,7 @@ def build_data(path):
     for file_name in files_names:
         file_path = path + file_name
 
-        if ".mat" in file_name:
+        if ".mat" in file_name or ".csv" in file_name:
             data_times, data_values = load_raw(file_path)
         else:
             result = load_processed([file_path])

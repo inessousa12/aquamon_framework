@@ -78,11 +78,24 @@ def popMultiple(data):
     Returns:
         [str]: data
     """
-    return_list = []
-    for i in range(len(data)):
-        return_list.append(data[i].pop(0))
+    # return_list = []
+    # for i in range(len(data)):
+    #     return_list.append(data[i].pop(0))
 
-    return return_list
+    # return return_list
+
+    next_idx = -1
+    for i in range(len(data)):
+        if len(data[i]) > 0:
+            if next_idx == -1:
+                next_idx = i
+            elif data[i][0]["time"] < data[next_idx][0]["time"]:
+                next_idx = i
+
+    if next_idx == -1:
+        return None
+
+    return data[next_idx].pop(0)
 
 
 def is_empty(data):
@@ -119,12 +132,11 @@ def send(data, sleep_t):
     current = None
     while not is_empty(data):
         item = popMultiple(data)
-        # print("item: ", item)
         msg = json.dumps(item)
 
         serv_sock.send_message(msg)
 
-        current = item[0]['time']
+        current = item['time']
         if last is None:
             last = current
 

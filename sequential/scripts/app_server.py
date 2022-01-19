@@ -17,68 +17,62 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 dataQueue = Queue()
-sensorQueue = Queue()
+# sensorQueue = Queue()
 
-# EXPLICAÇÃO SEMAPHORE VS CONDITION: https://stackoverflow.com/questions/3513045/conditional-variable-vs-semaphore
+# def omissionFD(cond, sensor_handler_data, index):
+#     """
+#     Thread that resolves ommision failures. Adds value 0 each time an interval (period_time + jitter) passes.
+#     Later in the processing thread, the value 0 will be replaced for a prediction.
 
-def omissionFD(cond, sensor_handler_data, index):
-    """
-    Thread that resolves ommision failures. Adds value 0 each time an interval (period_time + jitter) passes.
-    Later in the processing thread, the value 0 will be replaced for a prediction.
+#     Args:
+#         cond ([Condition]): lock condition
+#         sensor_handler_data ([json]) : json from configuration file
+#     """
+#     period_time = sensor_handler_data["period_time"]
+#     jitter = 1 #seconds
+#     last_time = 0
 
-    Args:
-        cond ([Condition]): lock condition
-        sensor_handler_data ([json]) : json from configuration file
-    """
-    period_time = sensor_handler_data["period_time"]
-    jitter = 1 #seconds
-    last_time = 0
-
-    while True:
-        cond.acquire()
-        flag = True
-        # print(sensorQueue.qsize())
-        while sensorQueue.qsize() == 0:
-            # print("wait sensorqueue")
-            # print(sensorQueue.qsize())
-            # cond.wait(timeout=1+jitter)
-            val = cond.wait(timeout=period_time+jitter)
-            #checks if there are missing values
-            if not val:
-                print("aqui")
-                #fill with value 0 for later evaluation
-                data = {'time': last_time + period_time + jitter, 'value': 0, 'type': 'temp', 'sensor': 'lnec'}
-                dataQueue.put(data)
-                flag = False
-            break
-        # data = sensorQueue.get()
-        # current_time = data[index]['time']
-        # if current_time == last_time + 900 + jitter or current_time == last_time + 900 or current_time == last_time + 900 - jitter: #last_time + 15min
-        #     dataQueue.put(data[index])
-        # else:
-        #     #fill with value 0 for later evaluation
-        #     data = {'time': last_time + 900 + jitter, 'value': 0, 'type': 'temp', 'sensor': 'lnec'}
-        #     dataQueue.put(data)
-        # last_time = current_time #only works for one sensor
-        if flag:
-            data = sensorQueue.get()
-            # print(data)
-            last_time = data[index]['time'] #only works for one sensor
-            dataQueue.put(data[index])
-        cond.notify()
-        cond.release()
-
-def communicate(cond, sensor_handler_data):
+#     while True:
+#         cond.acquire()
+#         flag = True
+#         # print(sensorQueue.qsize())
+#         while sensorQueue.qsize() == 0:
+#             # print("wait sensorqueue")
+#             # print(sensorQueue.qsize())
+#             # cond.wait(timeout=1+jitter)
+#             val = cond.wait(timeout=period_time+jitter)
+#             #checks if there are missing values
+#             if not val:
+#                 print("aqui")
+#                 #fill with value 0 for later evaluation
+#                 data = {'time': last_time + period_time + jitter, 'value': 0, 'type': 'temp', 'sensor': 'lnec'}
+#                 dataQueue.put(data)
+#                 flag = False
+#             break
+#         # data = sensorQueue.get()
+#         # current_time = data[index]['time']
+#         # if current_time == last_time + 900 + jitter or current_time == last_time + 900 or current_time == last_time + 900 - jitter: #last_time + 15min
+#         #     dataQueue.put(data[index])
+#         # else:
+#         #     #fill with value 0 for later evaluation
+#         #     data = {'time': last_time + 900 + jitter, 'value': 0, 'type': 'temp', 'sensor': 'lnec'}
+#         #     dataQueue.put(data)
+#         # last_time = current_time #only works for one sensor
+#         if flag:
+#             data = sensorQueue.get()
+#             # print(data)
+#             last_time = data[index]['time'] #only works for one sensor
+#             dataQueue.put(data[index])
+#         cond.notify()
+#         cond.release()
+ 
+def communicate(cond):
     """
     Thread that communicates with the socket and receives data.
 
     Args:
         cond ([Condition]): lock condition
-        sensor_handler_data ([json]) : json from configuration file
     """
-    period_time = sensor_handler_data["period_time"]
-    jitter = 1 #seconds
-    last_time = 0
 
     while True:
         try:
@@ -93,25 +87,7 @@ def communicate(cond, sensor_handler_data):
             cond.acquire()
 
             data = json.loads(recvCmd)
-            # if last_time == 0:
-            #     dataQueue.put(data[0])
-            #     last_time = data[0]["time"]
-            # elif data[0]["time"] > last_time + period_time + jitter:
-            #     dtime = last_time + period_time + jitter
-            #     while dtime < data[0]["time"]:
-            #         omission = {'time': dtime, 'value': 0, 'type': 'temp', 'sensor': 'lnec'}
-            #         last_time = dtime
-            #         dtime = last_time + period_time + jitter
-            #         dataQueue.put(omission)
-            #     dataQueue.put(data[0])
-            #     last_time = data[0]["time"]
-            # else:
-            #     dataQueue.put(data[0])
-            #     last_time = data[0]["time"]
-
-            # print(data)
-            # sensorQueue.put(data)
-            dataQueue.put(data[0])
+            dataQueue.put(data)
 
             cond.notify()
             cond.release()
@@ -142,15 +118,15 @@ def processing(cond, sensor_handler):
         data = dataQueue.get()
         sensor_handler.append(data)
 
-        cond.release()
+        # cond.release()
 
         #checks if there are enough values for a prediction and aligns times
         flag, new_times, sensor_values, sensor_times, inserted_values_indexes, sensor = align_times.check_new_times(sensor_handler)
-        
+
         #prediction and quality block
         if flag:
             prediction_quality.prediction_quality_process(new_times, sensor_values, sensor_times, inserted_values_indexes, sensor, sensor_handler)
-
+        cond.release()
         #output
         msg = ''
 
@@ -198,7 +174,7 @@ if __name__ == "__main__":
                                        bool(sensor_handler_data["ignore_miss"]))
 
         condition = threading.Condition()
-        commThread = threading.Thread(name="communicationThread", target=communicate, args=(condition, sensor_handler_data,))
+        commThread = threading.Thread(name="communicationThread", target=communicate, args=(condition,))
         processingThread = threading.Thread(name="processingThread", target=processing, args=(condition, sensor_handler,))
 
         # for i in range(len(sensors)):

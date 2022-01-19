@@ -46,8 +46,6 @@ class Server:
         
         Ensures: the message is sent to the connected socket.
         """
-        # self._dataQueue.put(message)
-        # print("dataqueue: ", message)
         msg_bytes = pickle.dumps(message, -1)
         size = struct.pack('!i', len(msg_bytes))
 

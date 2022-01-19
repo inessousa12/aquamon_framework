@@ -8,7 +8,7 @@ from scipy.io import loadmat
 import csv
 
 import numpy as np
-import datetime
+import datetime, time
 
 import entry_vectors
 
@@ -209,10 +209,12 @@ def build_new_times(times, sizes, skip_period, tide_period):
 
     last_times = -1
     count_diff = 0
+    # print("max: ", max_time_idx)
+    # print("len times: ", times[0][137])
     for i in range(init_time_idx, max_time_idx):
-
+       
         val = times[0][i]
-
+        # print(i)
         # Use skip_period to skip unwanted values Example: (3min-3min) -> (12min-12min)
         # diff = float(val - last_times) * (60 * 1440)
         diff = float(val - last_times) * 60
@@ -258,7 +260,7 @@ def build_new_times(times, sizes, skip_period, tide_period):
         if neighbour_data_missing:
             new_times.remove(new_times[t])
             break
-
+    # print(new_times)
     return new_times
 
 def generate1(target_time, times, values, sensor_handler, new_times):
@@ -281,10 +283,11 @@ def generate1(target_time, times, values, sensor_handler, new_times):
         times_g = new_times[i][0][0]
         if times_g == target_time:
             idx_target = i
-    # print(idx_target)
+    # print(target_time)
     # print(new_times)
     # print("len new times: ", len(new_times))
     # print("target_time: ", target_time)
+    # time.sleep(5)
     if idx_target is None:
         return None, None
 
@@ -326,7 +329,8 @@ def build_inputs(sizes=None, times=None, values=None, run_periods_self=None, run
 
         if new_times[i][0][2] != 0:
             time_minus_tide_period = times[0][new_times[i][0][2] - 1]
-            time_minus_tide_period = time_minus_tide_period - (tide_period / float(1440))
+            # time_minus_tide_period = time_minus_tide_period - (tide_period / float(1440))
+            time_minus_tide_period = time_minus_tide_period - (tide_period / float(60))
             tmp = times[0][:]
 
             first_idx = np.searchsorted(tmp, time_minus_tide_period, side="right")
@@ -371,7 +375,8 @@ def build_inputs(sizes=None, times=None, values=None, run_periods_self=None, run
             if new_times[i][j][2] != 0:
                 input_times[i - start].append([])
                 time_minus_tide_period = times[j][new_times[i][j][2]]
-                time_minus_tide_period = time_minus_tide_period - (tide_period / float(1440))
+                # time_minus_tide_period = time_minus_tide_period - (tide_period / float(1440))
+                time_minus_tide_period = time_minus_tide_period - (tide_period / float(60))
                 tmp = times[j][:]
 
                 first_idx = np.searchsorted(tmp, time_minus_tide_period, side="right")
@@ -441,7 +446,9 @@ def load_raw(path):
         with open(path, 'r') as file:
             csvreader = csv.reader(file)
             for row in csvreader:
-                times.append(float(row[0]))
+                # times.append(datetime.datetime.timestamp(datetime.datetime.strptime(row[0], '%Y/%m/%d %H:%M:%S')))
+                times.append(row[0])
+                # values.append(float(row[3]))
                 values.append(float(row[1]))
         return times, values
     elif ".npz" in path:

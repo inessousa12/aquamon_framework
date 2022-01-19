@@ -35,6 +35,7 @@ def build1_input(new_times, times, values, idx_target, sensor_handler):
     input_times = []
     if new_times[idx_target][0][2] != 0:
         time_minus_tide_period = times[0][new_times[idx_target][0][2] - 1]
+        # time_minus_tide_period = time_minus_tide_period - (tide_period * (60 * 1440))
         time_minus_tide_period = time_minus_tide_period - (tide_period * 60)
         tmp = times[0][:]
 
@@ -111,6 +112,7 @@ def build1_input(new_times, times, values, idx_target, sensor_handler):
         if new_times[idx_target][j][2] != 0:
             input_times.append([])
             time_minus_tide_period = times[j][new_times[idx_target][j][2]]
+            # time_minus_tide_period = time_minus_tide_period - (tide_period * (60 * 1440))
             time_minus_tide_period = time_minus_tide_period - (tide_period * 60)
             tmp = times[j][:]
 
@@ -128,15 +130,15 @@ def build1_input(new_times, times, values, idx_target, sensor_handler):
             if int(approach) == 1:
                 #exponential
                 times_array = np.ceil(
-                    np.exp(np.linspace(1, np.log(diff_between_idxs), run_periods_self))) - 1
+                    np.exp(np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_self))) - 1
             elif int(approach) == 2:
                 #linear
                 times_array = np.ceil(
-                    np.linspace(1, np.log(diff_between_idxs), run_periods_self))
+                    np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_self))
             elif int(approach) == 3:
                 #last ten
                 times_array = np.ceil(
-                    np.linspace(1, 9, run_periods_self))
+                    np.linspace(np.log(1), 9, run_periods_self))
 
             last_val = 0
             increment = 0

@@ -23,9 +23,12 @@ def prediction_quality_process(new_times, sensor_values, sensor_times, inserted_
     #prediction block
     sValues = sensor_values
     sTimes = sensor_times
+    # print("inserted indexes: ", inserted_values_indexes)
+    # print("sensor: ", sensor)
     if len(inserted_values_indexes) >= 1:
         for index in inserted_values_indexes:
-            # print(sensor_values[:index])
+            # print("index: ", index)
+            # print("len times: ", len(sTimes[0]))
             values = sensor_handler.prediction_block.try_prediction(index, sensor, sensor_handler, sValues[:index], sTimes[:index], new_times)
             # print(values)
             if len(values) > 0:
@@ -33,50 +36,43 @@ def prediction_quality_process(new_times, sensor_values, sensor_times, inserted_
                     sensor_handler.predictions_data[sensor][index] = []
                 sensor_handler.predictions_data[sensor][index].extend(values)
                 sensor_handler.quality_queue.put((sensor, index))
+            
+                #quality block
+                sensor, indexq = sensor_handler.quality_queue.get()
+                predictions = sensor_handler.predictions_data[sensor][indexq]
+                actual = sensor_handler.sensors_data[sensor].get(indexq)
 
-            #quality block
-            sensor, indexq = sensor_handler.quality_queue.get()
-            predictions = sensor_handler.predictions_data[sensor][indexq]
-            actual = sensor_handler.sensors_data[sensor].get(indexq)
+                quality = 1
+                if actual['value'] == 0:
+                    faulty = True
+                elif not actual['prediction']:
+                    m = actual['value']
+                    p = [i[2] for i in predictions]
 
-            quality = 1
-            if actual['value'] is None:
-                faulty = True
-            elif not actual['prediction']:
-                m = actual['value']
-                p = [i[2] for i in predictions]
+                    errors = sensor_handler.quality_block.calculate_error(m, p)
+                    faulty, probabilities = sensor_handler.quality_block.fault_detection(predictions, errors)
 
-                # if m == 0 or (abs(m-p[0]) > 1.5): #only for one sensor
-                #     faulty = True
-                # else:
-                print("P: ", p)
-                print("actual: ", m)
-                errors = sensor_handler.quality_block.calculate_error(m, p)
-                faulty, probabilities = sensor_handler.quality_block.fault_detection(predictions, errors)
-                # print("probability: ", probabilities)
+                    to_replace = False
+                    if not faulty:
+                        quality = sensor_handler.quality_block.quality_calculation(probabilities)
+                    else:
+                        quality = 0
+                        now = datetime.datetime.now()
 
-                to_replace = False
-                if not faulty:
-                    quality = sensor_handler.quality_block.quality_calculation(probabilities)
-                else:
-                    quality = 0
-                    now = datetime.datetime.now()
+                        _, true_t = sensor_handler.sensors_data[sensor].get_values()
+                        temp = sensor_handler.sensors_data[sensor].get(indexq)['time']
+                        true_index = true_t.index(temp)
 
-                    _, true_t = sensor_handler.sensors_data[sensor].get_values()
-                    temp = sensor_handler.sensors_data[sensor].get(indexq)['time']
-                    true_index = true_t.index(temp)
+                        print(f'[{now:%Y-%m-%d %H:%M:%S}] [{sensor} at index: {true_index} FAULT DETECTED]')
 
-                    print(f'[{now:%Y-%m-%d %H:%M:%S}] [{sensor} at index: {true_index} FAULT DETECTED]')
+                        to_replace = True
 
-                    to_replace = True
+                    if to_replace:
+                        mean_predictions = statistics.mean(p)
+                        sensor_handler.sensors_data[sensor].put_prediction(mean_predictions, indexq)
+                        sValues, sTimes = get_updated_values(sensor_handler, sensor)
 
-                if to_replace:
-                    mean_predictions = statistics.mean(p)
-                    sensor_handler.sensors_data[sensor].put_prediction(mean_predictions, indexq)
-                    print("replaced")
-                    sValues, sTimes = get_updated_values(sensor_handler, sensor)
-
-            sensor_handler.quality_data[sensor][indexq] = quality
+                sensor_handler.quality_data[sensor][indexq] = quality
 
 def get_updated_values(sensor_handler, sensor):
     times = []
@@ -87,14 +83,15 @@ def get_updated_values(sensor_handler, sensor):
 
     main_sensor_index = sensor_names.index(sensor)
 
-    if not sensor_handler.ignore_miss:
-        temp_v, temp_t = sensors_data[sensor].get_values()
-        values.append(temp_v)
-        times.append(temp_t)
-    else:
-        temp_v, temp_t = sensors_data[sensor].get_raw_values()
-        values.append(temp_v)
-        times.append(temp_t)
+    for sensor_name in sensor_names:
+        if not sensor_handler.ignore_miss:
+            temp_v, temp_t = sensors_data[sensor].get_values()
+            values.append(temp_v)
+            times.append(temp_t)
+        else:
+            temp_v, temp_t = sensors_data[sensor].get_raw_values()
+            values.append(temp_v)
+            times.append(temp_t)
 
     tmp = np.copy(values[0])
     values[0] = values[main_sensor_index]

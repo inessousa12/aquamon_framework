@@ -54,11 +54,12 @@ class PredictionBlock:
         """
 
         sensors = sensor_handler.get_sensors_data()
-
+        # print("appended_index: ", appended_index)
         target_time = sensors[sensor].get(appended_index)["time"]
         sizes = [len(i) for i in values]
 
         input_values, input_times = functions.generate1(target_time, times, values, sensor_handler, new_times)
+        # print(input_values)
 
         run_periods_self = sensor_handler.get_run_periods_self()
 
@@ -79,27 +80,12 @@ class PredictionBlock:
                         models.append(self_model)
                         to_input.append(inputs_self)
                         ann_type = ['self']
-                elif None not in inputs_others:
+                elif None not in inputs_others: #only enters if there is no omission
                     others_model = self.get_model(sensor, sensors[sensor].type, 'neighbours')
                     if others_model is not None:
                         models.append(others_model)
                         to_input.append(inputs_others)
                         ann_type = ['neighbours']
-                
-                # if None in inputs_self: #if there is an omission, the prediction will only take into account the available values
-                #     inputs_self.remove(None)
-                #     self_model = self.get_model(sensor, sensors[sensor].type, 'self')
-                #     if self_model is not None:
-                #         models.append(self_model)
-                #         to_input.append(inputs_self)
-                #         ann_type = ['self']
-                #     elif None in inputs_others:
-                #         inputs_others.remove(None)
-                #         others_model = self.get_model(sensor, sensors[sensor].type, 'neighbours')
-                #         if others_model is not None:
-                #             models.append(others_model)
-                #             to_input.append(inputs_others)
-                #             ann_type = ['neighbours']
             else:
                 all_model = self.get_model(sensor, sensors[sensor].type, 'all')
                 self_model = self.get_model(sensor, sensors[sensor].type, 'self')
@@ -125,8 +111,6 @@ class PredictionBlock:
                     path = models[i]['path']
                     model = models[i]['model']
                     inpt = to_input[i]
-                    # inpt = np.asarray(inpt)
-                    print("input: ", inpt)
                     p = model.predict((inpt,))[0][0]
                     predictions.append((path, ann_type[i], p, target_time))
 

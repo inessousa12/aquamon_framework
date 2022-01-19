@@ -6,6 +6,7 @@ from os.path import isfile, join, isdir
 import numpy as np
 
 import io_data
+import time
 
 
 def build(data_cfg):
@@ -294,16 +295,18 @@ def generate1(target_time, sizes, times, values, tide_period, skip_period,run_pe
               run_periods_others, new_times=None):
     if new_times is None:
         new_times = build_new_times(sizes, times, skip_period, tide_period)
-
+    # print(new_times)
+    
     idx_target = None
     for i in range(len(new_times)):
-        time = new_times[i][0][0]
-        if time == target_time:
+        timeS = new_times[i][0][0]
+        if timeS == target_time:
             idx_target = i
-
+    # print(idx_target)
+    # time.sleep(300)
     if idx_target is None:
         return None, None
-    print("AQUI2")
+
     input, input_times = build1_input(new_times, times, values, idx_target, tide_period,
                                       run_periods_self, run_periods_others)
 

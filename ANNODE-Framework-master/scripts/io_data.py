@@ -3,6 +3,7 @@ from os import listdir
 import numpy as np
 import json
 from scipy.io import loadmat
+import datetime, csv
 
 
 def save_data(array, path):
@@ -31,6 +32,15 @@ def load_raw(path):
     elif ".npz" in path:
         data = ((np.load(path, allow_pickle=True))['arr_0']).tolist()
         return data[0], data[1]
+    elif ".csv" in path:
+        times = []
+        values = []
+        with open(path, 'r') as file:
+            csvreader = csv.reader(file)
+            for row in csvreader:
+                times.append(datetime.datetime.timestamp(datetime.datetime.strptime(row[0], '%Y/%m/%d %H:%M:%S')))
+                values.append(float(row[3]))
+        return times, values
     else:
         return None, None
 
