@@ -1,8 +1,8 @@
 {
     "sensor_handler": {
         "tide_period": 750,
-        "run_periods_self": 60,
-        "run_periods_others": 20,
+        "run_periods_self": 10,
+        "run_periods_others": 0,
         "approach": 1,
         "cdf_threshold": 0.9985,
         "ignore_miss": "False",
@@ -14,23 +14,8 @@
         "port": 9999
     },
     "sensors" : [{
-        "sensor_id": "dsdma",
-        "path": "data\\raw_other\\01out_2013-31dec_2013\\temp\\dsdma_temp_1out_31dec_2013.csv",
-        "data_type": "temp"
-    },
-    {
-        "sensor_id": "jettya",
-        "path": "data\\raw_other\\01out_2013-31dec_2013\\temp\\jettya_temp_1out_31dec_2013.csv",
-        "data_type": "temp"
-    },
-    {
-        "sensor_id": "sandi",
-        "path": "data\\raw_other\\01out_2013-31dec_2013\\temp\\sandi_temp_1out_31dec_2013.csv",
-        "data_type": "temp"
-    },
-    {
-        "sensor_id": "tansy",
-        "path": "data\\raw_other\\01out_2013-31dec_2013\\temp\\tansy_temp_1out_31dec_2013.csv",
+        "sensor_id": "lnec",
+        "path": "data\\raw_other\\01set_2021-08set_2021\\temp\\lnec_data_set01_set08.json",
         "data_type": "temp"
     }]
 }

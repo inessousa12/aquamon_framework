@@ -63,11 +63,11 @@ def build1_input(new_times, times, values, idx_target, sensor_handler):
         elif int(approach) == 2:
             #linear
             times_array = np.ceil(
-                np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_self))
+                np.linspace(np.log(1), np.log(diff_between_idxs), run_periods_self)) - 1
         elif int(approach) == 3:
             #last ten
             times_array = np.ceil(
-                np.linspace(np.log(1), 9, run_periods_self))
+                np.linspace(np.log(1), 9, run_periods_self)) - 1
 
         last_val = 0
         increment = 0

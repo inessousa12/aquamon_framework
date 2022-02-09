@@ -8,18 +8,18 @@
   "loss_function": "mean_squared_error",
   "sensor": "tansy",
   "metric": "temp",
-  "inputs": "all",
+  "inputs": "self",
   "id": 10,
   "input_shape": 120,
-  "input_target": 60,
-  "input_others": 20,
+  "input_target": 120,
+  "input_others": "None",
   "checkpoint_epochs": 100,
   "checkpoint_path": "ann/training/",
   "model_save_path": "ann/models/",
   "data_path": [
-    "data\\processed\\21jul_2009-18oct_2009\\temp\\tansy.npz",
-    "data\\processed\\11nov_2009-05jun_2010\\temp\\tansy.npz"
+    "data/processed/21jul_2009-18oct_2009/temp/tansy.npz",
+    "data/processed/11nov_2009-05jun_2010/temp/tansy.npz"
   ],
-  "cdf_data_path": "data\\processed\\20aug_2010-10oct_2010\\temp\\tansy.npz",
-  "runs": 20
+  "cdf_data_path": "data/processed/20aug_2010-10oct_2010/temp/tansy.npz",
+  "runs": 10
 }

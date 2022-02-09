@@ -3,7 +3,7 @@ from tensorflow import keras
 import numpy as np
 import os
 import json
-import functions
+import functions, time
 
 class PredictionBlock:
     """
@@ -60,6 +60,7 @@ class PredictionBlock:
 
         input_values, input_times = functions.generate1(target_time, times, values, sensor_handler, new_times)
         # print(input_values)
+        # time.sleep(3)
 
         run_periods_self = sensor_handler.get_run_periods_self()
 

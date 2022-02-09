@@ -43,9 +43,7 @@ def prediction_quality_process(new_times, sensor_values, sensor_times, inserted_
                 actual = sensor_handler.sensors_data[sensor].get(indexq)
 
                 quality = 1
-                if actual['value'] == 0:
-                    faulty = True
-                elif not actual['prediction']:
+                if not actual['prediction']:
                     m = actual['value']
                     p = [i[2] for i in predictions]
 

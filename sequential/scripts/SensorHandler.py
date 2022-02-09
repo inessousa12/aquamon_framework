@@ -85,7 +85,7 @@ class SensorHandler:
                 print(len(values))
         return str
 
-    def append(self, data):
+    def append(self, data, flag):
         """
         Appends data to the prediction queue.
 
@@ -99,7 +99,7 @@ class SensorHandler:
             self.predictions_data[sensor] = {}
             self.quality_data[sensor] = {}
 
-        appended_indexes = self.sensors_data[data["sensor"]].append(data)
+        appended_indexes = self.sensors_data[data["sensor"]].append(data, flag)
         
 
         if len(appended_indexes) > 0:

@@ -73,7 +73,7 @@ def build(data_cfg):
 
     for raw_folder in raw_folders:
         for metric in data_cfg["metrics"]:
-
+            
             current_raw_folder = raw_folder + "/" + metric + "/"
 
             if not isdir(current_raw_folder):
@@ -211,6 +211,7 @@ def build_new_times(times, sizes, skip_period, tide_period):
     count_diff = 0
     # print("max: ", max_time_idx)
     # print("len times: ", times[0][137])
+
     for i in range(init_time_idx, max_time_idx):
        
         val = times[0][i]
@@ -260,7 +261,7 @@ def build_new_times(times, sizes, skip_period, tide_period):
         if neighbour_data_missing:
             new_times.remove(new_times[t])
             break
-    # print(new_times)
+
     return new_times
 
 def generate1(target_time, times, values, sensor_handler, new_times):
@@ -283,11 +284,6 @@ def generate1(target_time, times, values, sensor_handler, new_times):
         times_g = new_times[i][0][0]
         if times_g == target_time:
             idx_target = i
-    # print(target_time)
-    # print(new_times)
-    # print("len new times: ", len(new_times))
-    # print("target_time: ", target_time)
-    # time.sleep(5)
     if idx_target is None:
         return None, None
 
@@ -422,7 +418,6 @@ def save_data(array, path):
 
 
 def load_raw(path):
-    print(path)
     if ".mat" in path:
         data = loadmat(path)
     

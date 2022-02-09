@@ -34,6 +34,7 @@ def main():
             sys.exit(1)
 
         data_path = ann_cfg["data_path"]
+        print(data_path[0])
 
         if os.path.isfile(data_path[0]):
             try:
@@ -311,14 +312,14 @@ def save_models(ann_cfg):
     for i in range(len(folders_found)):
         model_folder = folders_found[i]
 
-        loss_file = f'{folders_found[i]}\\loss.json'
+        loss_file = f'{folders_found[i]}/loss.json'
 
         model = create_model(ann_cfg)
         latest_checkpoint = tf.train.latest_checkpoint(model_folder)
         model.load_weights(latest_checkpoint).expect_partial()
 
         save_folder = ann_cfg['model_save_path'] + \
-                      f"\\{ann_cfg['sensor']}_{ann_cfg['metric']}_{ann_cfg['inputs']}_{ann_cfg['id']}_r{i}\\"
+                      f"/{ann_cfg['sensor']}_{ann_cfg['metric']}_{ann_cfg['inputs']}_{ann_cfg['id']}_r{i}/"
         try:
             os.makedirs(save_folder, exist_ok=False)
             os.makedirs(save_folder + "stats", exist_ok=True)
@@ -332,8 +333,8 @@ def save_models(ann_cfg):
         with open(loss_file) as f:
             loss = json.load(f)['loss']
         print("SAVE FOLDER", save_folder)
-        functions.save_data(cdf, save_folder + "\\cdf.npz")
-        functions.save_loss(loss, save_folder + "\\loss.json")
+        functions.save_data(cdf, save_folder + "/cdf.npz")
+        functions.save_loss(loss, save_folder + "/loss.json")
         model.save(save_folder)
 
     print("Models Saved...")

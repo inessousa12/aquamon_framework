@@ -57,7 +57,6 @@ def build_multiple(raw_folder, save_folder, run_periods_self, run_periods_others
 
     for file in files_names:
         data_temp_times, data_temp_values = io_data.load_raw(raw_folder + file)
-        print(data_temp_times)
         raw_times.append(data_temp_times)
         raw_values.append(data_temp_values)
         raw_sizes.append(len(data_temp_times))
